@@ -24,7 +24,7 @@ d3.csv(subjectDataFile).then(function(data) {
 d3.csv(gpaDataFile).then(function(data) {
   data.forEach(function(d) {
     if (!(d["YearTerm"] in terms)) {
-      terms[d["YearTerm"]] = {"Year" : d["Year"], "Term" : d["Term"]}
+      terms[d["YearTerm"]] = {"Year":d["Year"], "Term":d["Term"]}
     }
   });
 
