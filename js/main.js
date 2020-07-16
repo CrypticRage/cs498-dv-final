@@ -29,20 +29,23 @@ d3.csv(subjectDataFile).then(function(data) {
     .attr("y", function(d, i) { return i * 100; });
 });
 
+let testString = "";
+let testInt = 0;
+
 d3.csv(gpaDataFile).then(function(data) {
   data.forEach(function(d) {
     if (!(d["YearTerm"] in terms)) {
       terms[d["YearTerm"]] = {"Year": d["Year"], "Term": d["Term"]};
     }
 
-    if (d["Year"] === 2019) {
-      console.info("found one");
+    if (d["Year"] == 2019) {
       const subjectNumber = d["Subject"] + d["Number"];
 
       let total = 0;
-      total += grades.forEach(function(grade) {
-        return d[grade];
+      grades.forEach(function(grade) {
+        total += parseInt(d[grade]);
       });
+      testInt = total;
 
       if (subjectNumber in courses) {
         courses[subjectNumber]["Total"] += total;
