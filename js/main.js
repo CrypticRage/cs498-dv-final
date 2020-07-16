@@ -39,7 +39,7 @@ d3.csv(gpaDataFile).then(function(data) {
     }
 
     if (d["Year"] == 2019) {
-      const subjectNumber = d["Subject"] + d["Number"];
+      const subjectNumber = d["Subject"].toString() + ":" + d["Number"].toString() + ":" + d["Course Title"].toString();
 
       let total = 0;
       grades.forEach(function(grade) {
