@@ -1,8 +1,16 @@
+// var d3 = require("d3");
+
+const grades = [
+  "A+", "A", "A-", "B+", "B", "B-",
+  "C+", "C", "C-", "D+", "D", "D-", "F", "W"
+];
+
 const gpaDataFile = "data/uiuc-gpa-dataset.txt"
 const subjectDataFile = "data/subjects.txt"
 
-const terms = {}
+const terms = {};
 const subjects = {};
+const courses = {};
 
 const debugText = d3.select("#debug");
 
@@ -24,7 +32,25 @@ d3.csv(subjectDataFile).then(function(data) {
 d3.csv(gpaDataFile).then(function(data) {
   data.forEach(function(d) {
     if (!(d["YearTerm"] in terms)) {
-      terms[d["YearTerm"]] = {"Year":d["Year"], "Term":d["Term"]}
+      terms[d["YearTerm"]] = {"Year": d["Year"], "Term": d["Term"]};
+    }
+
+    if (d["Year"] === 2019) {
+      console.info("found one");
+      const subjectNumber = d["Subject"] + d["Number"];
+
+      let total = 0;
+      total += grades.forEach(function(grade) {
+        return d[grade];
+      });
+
+      if (subjectNumber in courses) {
+        courses[subjectNumber]["Total"] += total;
+      }
+      else {
+        courses[subjectNumber] =
+          {"Subject": d["Subject"], "Number": d["Number"], "Total": total};
+      }
     }
   });
 
@@ -33,11 +59,11 @@ d3.csv(gpaDataFile).then(function(data) {
     .enter().append("p")
     .filter(function(d) { return d["Subject"] in subjects })
     .filter(function(d) { return d["Number"] >= 400 })
-    .filter(function(d) { return d["YearTerm"] === "2019-fa" })
+    .filter(function(d) { return d["Term"] === "Fall" })
     .text(function(d) {
-      var propValue;
-      var propString;
-      for(var propName in d) {
+      let propValue = "";
+      let propString = "";
+      for(let propName in d) {
         propValue = d[propName]
         propString += propName + " - " + propValue + " \n"
       }
