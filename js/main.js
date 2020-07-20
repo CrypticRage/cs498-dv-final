@@ -39,7 +39,7 @@ d3.csv(gpaDataFile).then(function(data) {
     }
 
     if (d["Year"] == 2019) {
-      const subjectNumber = d["Subject"].toString() + ":" + d["Number"].toString() + ":" + d["Course Title"].toString();
+      const key = d["Subject"].toString() + ":" + d["Number"].toString() + ":" + d["Course Title"].toString();
 
       let total = 0;
       grades.forEach(function(grade) {
@@ -47,22 +47,21 @@ d3.csv(gpaDataFile).then(function(data) {
       });
       testInt = total;
 
-      if (subjectNumber in courses) {
-        courses[subjectNumber]["Total"] += total;
+      if (key in courses) {
+        courses[key]["Total"] += total;
       }
       else {
-        courses[subjectNumber] =
-          {"Subject": d["Subject"], "Number": d["Number"], "Total": total};
+        courses[key] =
+          {"Subject": d["Subject"], "Number": d["Number"], "Title": d["Course Title"], "Total": total};
       }
     }
   });
 
   debugText.selectAll("p")
-    .data(data)
+    .data(Object.values(courses))
     .enter().append("p")
     .filter(function(d) { return d["Subject"] in subjects })
-    .filter(function(d) { return d["Number"] >= 400 })
-    .filter(function(d) { return d["Term"] === "Fall" })
+    .filter(function(d) { return (d["Number"] >= 90) && (d["Number"] <= 900) })
     .text(function(d) {
       let propValue = "";
       let propString = "";
