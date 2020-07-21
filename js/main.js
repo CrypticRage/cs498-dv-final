@@ -18,9 +18,18 @@ let subjectKeys = [];
 
 // set the dimensions and margins of the graph
 var maxRadius = 40.0;
+var xLabelPad = 5.0;
+var xLabelHeight = 30.0;
 var yLabelWidth = 60.0;
 var yLabelPad = 5.0;
-var margin = { top: maxRadius, right: maxRadius, bottom: maxRadius, left: maxRadius + yLabelWidth };
+
+var margin = {
+  top: maxRadius + xLabelHeight,
+  right: maxRadius,
+  bottom: maxRadius,
+  left: maxRadius + yLabelWidth
+};
+
 var width = 1200 - margin.left - margin.right;
 var height = 1500 - margin.top - margin.bottom;
 
@@ -35,13 +44,23 @@ var y = d3.scaleBand()
 var r = d3.scaleLinear()
   .range([maxRadius / 10.0, maxRadius])
 
+var cellHeight = maxRadius * 2.0;
+var cellWidth = x(classLevels[1]);
+
 // grab all the svg elements
 const diagram = d3.select("svg")
+diagram
   .attr("width", width + margin.left + margin.right)
   .attr("height", height + margin.top + margin.bottom);
 
 const grid = d3.select("#grid")
   .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+const cellsPassive = d3.select("#cellsPassive")
+  .attr("transform", "translate(" + margin.left + "," + xLabelHeight + ")");
+
+const cellsActive = d3.select("#cellsActive")
+  .attr("transform", "translate(" + margin.left + "," + xLabelHeight + ")");
 
 const mainBody = d3.select("#mainBody")
   .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
@@ -66,10 +85,30 @@ d3.csv(subjectDataFile).then(function(data) {
     subjects[d["Subject"]] = d["Title"];
   });
 
-  subjectKeys = Object.keys(subjects);
-
   // set subject scale
+  subjectKeys = Object.keys(subjects);
   y.domain(subjectKeys);
+
+  subjectKeys.forEach(function(subject, i) {
+    classLevels.forEach(function (level, j) {
+      cellsPassive.append("rect")
+        .attr("x", x(level))
+        .attr("y", y(subject))
+        .attr("width", cellWidth)
+        .attr("height", cellHeight)
+        .attr("fill", "rgb(0, 0, 255)")
+        .attr("opacity", 0.40);
+
+      cellsActive.append("rect")
+        .attr("x", x(level))
+        .attr("y", y(subject))
+        .attr("width", cellWidth)
+        .attr("height", cellHeight)
+        .attr("opacity", 0.0)
+        .on("mouseover", handleMouseOver)
+        .on("mouseout", handleMouseOut);
+    });
+  });
 
   labels.selectAll(".ylabel")
     .data(data)
@@ -80,7 +119,7 @@ d3.csv(subjectDataFile).then(function(data) {
       .attr("text-anchor", "end")
       .attr("alignment-baseline", "middle")
       .attr("x", yLabelWidth - yLabelPad)
-      .attr("y", function(d) { return y(d["Subject"]) + maxRadius; });
+      .attr("y", function(d) { return y(d["Subject"]) + margin.top; });
 
   grid.selectAll(".yline")
     .data(data)
@@ -101,7 +140,7 @@ let maxTotal = 0;
 
 function handleMouseOver(d, i) {
   console.log("over d:" + d + ", i:" + i);
-  d3.select(this).attr({
+  d.attr({
     fill: "orange",
     stroke: "black"
   });
@@ -109,7 +148,7 @@ function handleMouseOver(d, i) {
 
 function handleMouseOut(d, i) {
   console.log("out d:" + d + ", i:" + i);
-  d3.select(this).attr({
+  d.attr({
     fill: "black",
     stroke: "none"
   });
@@ -121,7 +160,7 @@ d3.csv(gpaDataFile).then(function(data) {
       terms[d["YearTerm"]] = {"Year": d["Year"], "Term": d["Term"]};
     }
 
-    if (d["Year"] == 2018) {
+    if (parseInt(d["Year"]) === 2018) {
       const key = d["Subject"].toString() + ":" + d["Number"].toString() + ":" + d["Course Title"].toString();
 
       let total = 0;
@@ -155,16 +194,14 @@ d3.csv(gpaDataFile).then(function(data) {
     .attr("cx", function(d) { return x(parseInt(d["Number"])); })
     .attr("cy", function(d) { return y(d["Subject"]); })
     .attr("r", function(d) { return r(d["Total"]); })
-    .attr("fill-opacity", .25)
-    .on("mouseover", handleMouseOver)
-    .on("mouseout", handleMouseOut);
+    .attr("fill-opacity", .25);
 
   // render debug text
   debugText.selectAll(".debug")
     .data(courseList)
     .enter().append("p")
     .filter(function(d) { return d["Subject"] in subjects })
-    .filter(function(d) { return (d["Number"] >= 90) && (d["Number"] <= 900) })
+    .filter(function(d) { return (d["Number"] >= 498) && (d["Number"] <= 498) })
     .text(function(d) {
       let propValue = "";
       let propString = "";
