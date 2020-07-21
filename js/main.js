@@ -5,6 +5,8 @@ const grades = [
   "C+", "C", "C-", "D+", "D", "D-", "F", "W"
 ];
 
+const classLevels = [100, 200, 300, 400, 500];
+
 const gpaDataFile = "data/uiuc-gpa-dataset.txt"
 const subjectDataFile = "data/subjects.txt"
 
@@ -12,25 +14,106 @@ const terms = {};
 const subjects = {};
 const courses = {};
 
+let subjectKeys = [];
+
+// set the dimensions and margins of the graph
+var maxRadius = 40.0;
+var yLabelWidth = 60.0;
+var yLabelPad = 5.0;
+var margin = { top: maxRadius, right: maxRadius, bottom: maxRadius, left: maxRadius + yLabelWidth };
+var width = 1200 - margin.left - margin.right;
+var height = 1500 - margin.top - margin.bottom;
+
+// set the ranges
+var x = d3.scaleLinear()
+  .range([0, width])
+  .domain([100, 600]);
+
+var y = d3.scaleBand()
+  .range([0, height]);
+
+var r = d3.scaleLinear()
+  .range([maxRadius / 10.0, maxRadius])
+
+// grab all the svg elements
+const diagram = d3.select("svg")
+  .attr("width", width + margin.left + margin.right)
+  .attr("height", height + margin.top + margin.bottom);
+
+const grid = d3.select("#grid")
+  .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+const mainBody = d3.select("#mainBody")
+  .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+const labels = d3.select("#labels")
+  .attr("transform", "translate(" + 0 + "," + 0 + ")");
+
 const debugText = d3.select("#debug");
 
+classLevels.forEach(function(level, index) {
+  grid.append("line")
+    .attr("x1", x(level))
+    .attr("y1", -maxRadius)
+    .attr("x2", x(level))
+    .attr("y2", height)
+    .attr("stroke", "rgb(255, 0, 0)")
+    .attr("stroke-width", 2)
+});
+
 d3.csv(subjectDataFile).then(function(data) {
-  // console.log(data);
   data.forEach(function(d) {
     subjects[d["Subject"]] = d["Title"];
   });
 
-  diagram.selectAll(".subject")
+  subjectKeys = Object.keys(subjects);
+
+  // set subject scale
+  y.domain(subjectKeys);
+
+  labels.selectAll(".ylabel")
     .data(data)
-    .enter().append("text")
-    .text(function(d) { return d["Subject"]; })
-    .attr("class", "subject")
-    .attr("x", function(d) { return 20; })
-    .attr("y", function(d, i) { return i * 100; });
+    .enter()
+    .append("text")
+      .text(function(d) { return d["Subject"]; })
+      .attr("class", "subject")
+      .attr("text-anchor", "end")
+      .attr("alignment-baseline", "middle")
+      .attr("x", yLabelWidth - yLabelPad)
+      .attr("y", function(d) { return y(d["Subject"]) + maxRadius; });
+
+  grid.selectAll(".yline")
+    .data(data)
+    .enter()
+    .append("line")
+      .attr("x1", -maxRadius)
+      .attr("y1", function(d) { return y(d["Subject"]) })
+      .attr("x2", width)
+      .attr("y2", function(d) { return y(d["Subject"]) })
+      .attr("stroke", "rgb(255, 0, 0)")
+      .attr("stroke-width", 1)
+      .attr("opacity", 0.25);
 });
 
 let testString = "";
 let testInt = 0;
+let maxTotal = 0;
+
+function handleMouseOver(d, i) {
+  console.log("over d:" + d + ", i:" + i);
+  d3.select(this).attr({
+    fill: "orange",
+    stroke: "black"
+  });
+}
+
+function handleMouseOut(d, i) {
+  console.log("out d:" + d + ", i:" + i);
+  d3.select(this).attr({
+    fill: "black",
+    stroke: "none"
+  });
+}
 
 d3.csv(gpaDataFile).then(function(data) {
   data.forEach(function(d) {
@@ -38,27 +121,47 @@ d3.csv(gpaDataFile).then(function(data) {
       terms[d["YearTerm"]] = {"Year": d["Year"], "Term": d["Term"]};
     }
 
-    if (d["Year"] == 2019) {
+    if (d["Year"] == 2018) {
       const key = d["Subject"].toString() + ":" + d["Number"].toString() + ":" + d["Course Title"].toString();
 
       let total = 0;
       grades.forEach(function(grade) {
         total += parseInt(d[grade]);
       });
-      testInt = total;
 
       if (key in courses) {
         courses[key]["Total"] += total;
+        total = courses[key]["Total"];
       }
       else {
         courses[key] =
           {"Subject": d["Subject"], "Number": d["Number"], "Title": d["Course Title"], "Total": total};
       }
+
+      if (d["Subject"] in subjects) maxTotal = (total > maxTotal) ? total : maxTotal;
     }
   });
 
-  debugText.selectAll("p")
-    .data(Object.values(courses))
+  let courseList = Object.values(courses);
+
+  // set subject scale
+  r.domain([0, maxTotal]);
+
+  // append the circles for the chart
+  mainBody.selectAll(".circle")
+    .data(courseList)
+    .enter().append("circle")
+    .filter(function(d) { return d["Subject"] in subjects })
+    .attr("cx", function(d) { return x(parseInt(d["Number"])); })
+    .attr("cy", function(d) { return y(d["Subject"]); })
+    .attr("r", function(d) { return r(d["Total"]); })
+    .attr("fill-opacity", .25)
+    .on("mouseover", handleMouseOver)
+    .on("mouseout", handleMouseOut);
+
+  // render debug text
+  debugText.selectAll(".debug")
+    .data(courseList)
     .enter().append("p")
     .filter(function(d) { return d["Subject"] in subjects })
     .filter(function(d) { return (d["Number"] >= 90) && (d["Number"] <= 900) })
@@ -67,35 +170,15 @@ d3.csv(gpaDataFile).then(function(data) {
       let propString = "";
       for(let propName in d) {
         propValue = d[propName]
-        propString += propName + " - " + propValue + " \n"
+        propString += propName + " - " + propValue + " "
       }
+      propString += " \n"
       return propString;
     })
 });
 
-// set the dimensions and margins of the graph
-var margin = { top: 20, right: 20, bottom: 30, left: 40 };
-var width = 960 - margin.left - margin.right;
-var height = 500 - margin.top - margin.bottom;
-
-// set the ranges
-var x = d3.scaleBand()
-  .range([0, width])
-  .padding(0.1);
-
-var y = d3.scaleLinear()
-  .range([height, 0]);
-
-// append the svg object to the body of the page
-// append a 'group' element to 'svg'
-// moves the 'group' element to the top left margin
-var diagram = d3.select("#diagram").append("svg")
-  .attr("width", width + margin.left + margin.right)
-  .attr("height", height + margin.top + margin.bottom)
-  .append("g")
-  .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
 // get the data
+/*
 d3.csv("data/sales.csv").then(function(data) {
 
   // format the data
@@ -126,3 +209,4 @@ d3.csv("data/sales.csv").then(function(data) {
   diagram.append("g")
     .call(d3.axisLeft(y));
 });
+*/
