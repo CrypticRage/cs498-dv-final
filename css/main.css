@@ -86,12 +86,69 @@ textarea {
 /* ==========================================================================
    Author's custom styles
    ========================================================================== */
+
 svg {
-  margin:auto;
-  display:block;
+  margin: auto;
+  display: block;
 }
 
-.bar { fill: steelblue; }
+text.subject {
+  text-anchor: end;
+  alignment-baseline: middle;
+}
+
+line.xLine {
+  stroke: red;
+  stroke-width: 2;
+  opacity: 0.5;
+}
+
+line.yLine {
+  stroke: red;
+  stroke-width: 1;
+  opacity: 0.25;
+}
+
+circle.course {
+  fill-opacity: .15;
+  fill: black;
+}
+
+rect.cell.active {
+  opacity: 0.0;
+}
+
+rect.cell.passive {
+  fill: #555555;
+  opacity: 0.2;
+}
+
+rect.cell.passive.over {
+  opacity: 0.65;
+}
+
+rect.cell.passive.out {
+  opacity: 0.2;
+}
+
+rect.cell.passive.click {
+  fill: #95ccec;
+  opacity: 1.0;
+}
+
+rect.menuItemRect {
+  fill: #95ccec;
+  opacity: 1.0;
+}
+
+text.menuItemText {
+  font: 12px sans-serif;
+  color: black;
+  text-anchor: start;
+  alignment-baseline: middle;
+}
+
+rect.bar { fill: steelblue; }
 
 /* ==========================================================================
    Helper classes
