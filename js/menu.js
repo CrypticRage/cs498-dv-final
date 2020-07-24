@@ -32,6 +32,7 @@ function initMenu(cellPassive, courseList, baseTransform) {
       .attr("id", function(d) { return d["Subject"] + d["Number"] })
       .attr("data-subject", function(d) { return d["Subject"] })
       .attr("data-number", function(d) { return d["Number"] })
+      .attr("data-title", function(d) { return d["Title"] })
       .on("mouseover", handleMouseOver)
       .on("mouseout", handleMouseOut)
       .on("click", handleClick);
@@ -82,9 +83,10 @@ function handleClick() {
   let menuItem = d3.select(this);
   let subject = menuItem.attr("data-subject");
   let number = +menuItem.attr("data-number");
+  let title = menuItem.attr("data-title");
 
   let testYear = 2018;
-  let query = new Query(testYear, testYear, subject, number);
+  let query = new Query(2015, testYear, subject, number, title);
 
   handleMenuItemClick(query);
 }
