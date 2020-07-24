@@ -114,6 +114,11 @@ circle.course {
   fill: black;
 }
 
+circle.course.over {
+  fill-opacity: 1.0;
+  fill: #70cf93;
+}
+
 rect.cell.active {
   opacity: 0.0;
 }
@@ -127,10 +132,6 @@ rect.cell.passive.over {
   opacity: 0.65;
 }
 
-rect.cell.passive.out {
-  opacity: 0.2;
-}
-
 rect.cell.passive.click {
   fill: #95ccec;
   opacity: 1.0;
@@ -141,11 +142,24 @@ rect.menuItemRect {
   opacity: 1.0;
 }
 
+rect.menuItemRect.over {
+  fill: #70cf93;
+  opacity: 1.0;
+}
+
 text.menuItemText {
   font: 12px sans-serif;
   color: black;
   text-anchor: start;
   alignment-baseline: middle;
+  pointer-events: none;
+}
+
+rect.barChartBackground {
+  fill: #aaabb3;
+  opacity: 1.0;
+  stroke: #c9c883;
+  stroke-width: 1;
 }
 
 rect.bar { fill: steelblue; }

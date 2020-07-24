@@ -1,19 +1,12 @@
-// var d3 = require("d3");
-
-const grades = [
-  "A+", "A", "A-", "B+", "B", "B-",
-  "C+", "C", "C-", "D+", "D", "D-", "F", "W"
-];
-
-const classLevels = [100, 200, 300, 400, 500];
-
-const gpaDataFile = "data/uiuc-gpa-dataset.txt"
-const subjectDataFile = "data/subjects.txt"
+import { initMenu, clearMenu, setCallback } from "./menu.js";
+import { initChart, clearChart, showChart } from "./barchart.js";
+import { grades, classLevels, gpaDataFile, subjectDataFile, Query } from "./globals.js";
 
 const terms = {};
 const subjects = {};
 const courses = {};
 
+let rawData = null;
 let courseList = [];
 let subjectKeys = [];
 
@@ -70,10 +63,9 @@ const labels = d3.select("#labels")
   .attr("transform", "translate(" + 0 + "," + 0 + ")");
 
 const circles = d3.select("#mainBody").select("#circles");
-const menu = d3.select("#mainBody").select("#menu");
 const debugText = d3.select("#debug");
 
-let currentMenuSelection = "";
+let currentCellSelection = "";
 
 classLevels.forEach(function(level, index) {
   grid.append("line")
@@ -99,7 +91,7 @@ d3.csv(subjectDataFile).then(function(data) {
         .attr("id", subject + level.toString())
         .attr("data-subject", subject)
         .attr("data-level", level)
-        .attr("class", "cell passive out")
+        .attr("class", "cell passive")
         .attr("x", x(level))
         .attr("y", y(subject))
         .attr("width", cellWidth)
@@ -142,86 +134,25 @@ let testObject = Object.create(null);
 let testInt = 0;
 let maxTotal = 0;
 
-function handleMouseOver() {
-  let cellPassive = d3.select("g#cellsPassive").select("rect#" + this.id + ".cell.passive");
-  if (!cellPassive.attr("class").includes("click")) {
-    cellPassive.attr("class", "cell passive over");
-  }
-}
-
-function handleMouseOut() {
-  let cellPassive = d3.select("g#cellsPassive").select("rect#" + this.id + ".cell.passive");
-  if (!cellPassive.attr("class").includes("click")) {
-    cellPassive.attr("class", "cell passive out");
-  }
-}
-
-function handleClick() {
-  if (currentMenuSelection && (currentMenuSelection === this.id)) return;
-
-  if (currentMenuSelection !== "") {
-    let currentCellPassive = d3.select("g#cellsPassive").select("rect#" + currentMenuSelection + ".cell.passive");
-    currentCellPassive.attr("class", "cell passive");
-  }
-
-  let cellPassive = d3.select("g#cellsPassive").select("rect#" + this.id + ".cell.passive");
-  cellPassive.attr("class", "cell passive click");
-
-  let subject = cellPassive.attr("data-subject");
-  let level = parseInt(cellPassive.attr("data-level"));
-  let x = parseInt(cellPassive.attr("x"));
-  let y = parseInt(cellPassive.attr("y")) + parseInt(cellPassive.attr("height")) / 2.0;
-  let itemHeight = 22;
-  let itemWidth = parseInt(cellPassive.attr("width"));
-
-  menu.attr("transform", "translate(" + x + "," + y + ")");
-  menu.selectAll(".menuItem").remove();
-
-  let menuSelect = menu.selectAll(".menuItem")
-    .data(courseList)
-    .enter()
-    .filter(function(d) { return d["Subject"] === subject })
-    .filter(function(d) { return (d["Number"] >= level) && (d["Number"] <= level + 99) })
-    .append("g")
-      .attr("class", "menuItem");
-
-  menuSelect.append("rect")
-    .attr("class", "menuItemRect")
-    .attr("x", 0)
-    .attr("y", function(d, i) { return i * itemHeight })
-    .attr("width", itemWidth)
-    .attr("height", itemHeight);
-
-  menuSelect.append("text")
-    .text(menuText)
-    .attr("class", "menuItemText")
-    .attr("x", 0)
-    .attr("y", function(d, i) { return i * itemHeight + itemHeight / 2.0 });
-
-  debugText.selectAll(".debug")
-    .data(courseList)
-    .enter()
-    .filter(function(d) { return d["Subject"] === subject })
-    .filter(function(d) { return (d["Number"] >= level) && (d["Number"] <= level + 99) })
-    .append("p")
-      .attr("class", "debug")
-      .text(writeDebug);
-
-  currentMenuSelection = this.id;
-}
-
 d3.csv(gpaDataFile).then(function(data) {
   data.forEach(function(d) {
+    d["Number"] = +d["Number"];
+    d["Year"] = +d["Year"];
+
+    grades.forEach(function(grade) {
+      d[grade] = + d[grade];
+    });
+
     if (!(d["YearTerm"] in terms)) {
       terms[d["YearTerm"]] = {"Year": d["Year"], "Term": d["Term"]};
     }
 
-    if (parseInt(d["Year"]) === 2018) {
-      const key = d["Subject"].toString() + ":" + d["Number"].toString() + ":" + d["Course Title"].toString();
+    if (d["Year"] === 2018) {
+      const key = d["Subject"] + ":" + d["Number"].toString() + ":" + d["Course Title"];
 
       let total = 0;
       grades.forEach(function(grade) {
-        total += parseInt(d[grade]);
+        total += d[grade];
       });
 
       if (key in courses) {
@@ -237,7 +168,9 @@ d3.csv(gpaDataFile).then(function(data) {
     }
   });
 
+  rawData = data;
   courseList = Object.values(courses);
+  initChart(data);
 
   // set subject scale
   r.domain([0, maxTotal]);
@@ -248,14 +181,63 @@ d3.csv(gpaDataFile).then(function(data) {
     .enter()
     .filter(function(d) { return d["Subject"] in subjects })
     .append("circle")
-      .attr("class", "course")
-      .attr("cx", function(d) { return x(parseInt(d["Number"])); })
-      .attr("cy", function(d) { return y(d["Subject"]); })
-      .attr("r", function(d) { return r(d["Total"]); });
+    .attr("class", "course")
+    .attr("id", function(d) { return d["Subject"] + d["Number"] })
+    .attr("cx", function(d) { return x(parseInt(d["Number"])); })
+    .attr("cy", function(d) { return y(d["Subject"]); })
+    .attr("r", function(d) { return r(d["Total"]); });
 });
 
-function menuText(d) {
-  return d["Number"] + "-" + d["Title"]
+function showBarChart(query) {
+  showChart(query);
+}
+
+function handleMouseOver() {
+  let cellPassive = d3.select("g#cellsPassive").select("rect#" + this.id + ".cell.passive");
+  if (!cellPassive.attr("class").includes("click")) {
+    cellPassive.attr("class", "cell passive over");
+  }
+}
+
+function handleMouseOut() {
+  let cellPassive = d3.select("g#cellsPassive").select("rect#" + this.id + ".cell.passive");
+  if (!cellPassive.attr("class").includes("click")) {
+    cellPassive.attr("class", "cell passive");
+  }
+}
+
+function handleClick() {
+  let cellPassive = d3.select("g#cellsPassive").select("rect#" + this.id + ".cell.passive");
+
+  if (currentCellSelection && (currentCellSelection === this.id)) {
+    cellPassive.attr("class", "cell passive");
+    currentCellSelection = "";
+    clearMenu();
+    return;
+  }
+  else if (currentCellSelection) {
+    let currentCellPassive = d3.select("g#cellsPassive").select("rect#" + currentCellSelection + ".cell.passive");
+    currentCellPassive.attr("class", "cell passive");
+  }
+
+  cellPassive.attr("class", "cell passive click");
+  setCallback(showBarChart);
+  initMenu(cellPassive, courseList, mainBody.attr("transform"));
+
+  let subject = cellPassive.attr("data-subject");
+  let level = +cellPassive.attr("data-level");
+
+  debugText.selectAll(".debug").remove();
+  debugText.selectAll(".debug")
+    .data(courseList)
+    .enter()
+    .filter(function(d) { return d["Subject"] === subject })
+    .filter(function(d) { return (d["Number"] >= level) && (d["Number"] <= level + 99) })
+    .append("p")
+      .attr("class", "debug")
+      .text(writeDebug);
+
+  currentCellSelection = this.id;
 }
 
 function writeDebug(d) {
@@ -268,37 +250,3 @@ function writeDebug(d) {
   propString += " \n"
   return propString;
 }
-
-// get the data
-/*
-d3.csv("data/sales.csv").then(function(data) {
-
-  // format the data
-  data.forEach(function(d) {
-    d.sales = +d.sales;
-  });
-
-  // Scale the range of the data in the domains
-  x.domain(data.map(function(d) { return d.salesperson; }));
-  y.domain([0, d3.max(data, function(d) { return d.sales; })]);
-
-  // append the rectangles for the bar chart
-  diagram.selectAll(".bar")
-    .data(data)
-    .enter().append("rect")
-    .attr("class", "bar")
-    .attr("x", function(d) { return x(d.salesperson); })
-    .attr("width", x.bandwidth())
-    .attr("y", function(d) { return y(d.sales); })
-    .attr("height", function(d) { return height - y(d.sales); });
-
-  // add the x Axis
-  diagram.append("g")
-    .attr("transform", "translate(0," + height + ")")
-    .call(d3.axisBottom(x));
-
-  // add the y Axis
-  diagram.append("g")
-    .call(d3.axisLeft(y));
-});
-*/
