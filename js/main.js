@@ -1,15 +1,17 @@
 import { Menu } from "./menu.js";
-import { initChart, clearChart, showChart } from "./barchart.js";
-import { grades, classLevels, gpaDataFile, subjectDataFile, Query } from "./globals.js";
+import { BarChart } from "./barchart.js";
+import { Query } from "./globals.js";
+import Globals from "./globals.js";
+import navBar from "./navbar.js";
 
 const years = [];
 const terms = {};
 const subjects = {};
 
 let rawData = null;
+let filteredData = null;
 let courses = {};
 let courseList = [];
-let subjectKeys = [];
 
 // set the dimensions and margins of the graph
 var maxRadius = 40.0;
@@ -25,11 +27,14 @@ var margin = {
   left: maxRadius + yLabelWidth
 };
 
-var width = 1200 - margin.left - margin.right;
+var width = 1100 - margin.left - margin.right;
 var height = 1500 - margin.top - margin.bottom;
 
 let startYear = 2014;
 let endYear = 2015;
+
+let maxTotal = 0;
+let minTotal = 20;
 
 // set the ranges
 var x = d3.scaleLinear()
@@ -44,9 +49,8 @@ var r = d3.scaleLog()
   .range([2, maxRadius])
 
 var cellHeight = maxRadius * 2.0;
-var cellWidth = x(classLevels[1]);
+var cellWidth = x(Globals.classLevels[1]);
 
-const navGrid = d3.select("div#navGrid");
 const content = d3.select("div#content");
 const debugText = d3.select("div#debug");
 
@@ -78,10 +82,11 @@ const labels = chart.append("g")
   .attr("transform", "translate(" + 0 + "," + 0 + ")");
 
 const menu = new Menu(chart, showBarChart);
+let barChart = null;
 
 let currentCellSelection = "";
 
-classLevels.forEach(function(level, index) {
+Globals.classLevels.forEach(function(level, index) {
   grid.append("line")
     .attr("class", "xLine")
     .attr("x1", x(level))
@@ -90,7 +95,9 @@ classLevels.forEach(function(level, index) {
     .attr("y2", height);
 });
 
-d3.csv(subjectDataFile).then(function(data) {
+d3.csv(Globals.subjectDataFile).then(function(data) {
+  let subjectKeys = [];
+
   data.forEach(function(d) {
     subjects[d["Subject"]] = d["Title"];
   });
@@ -100,7 +107,7 @@ d3.csv(subjectDataFile).then(function(data) {
   y.domain(subjectKeys);
 
   subjectKeys.forEach(function(subject, i) {
-    classLevels.forEach(function (level, j) {
+    Globals.classLevels.forEach(function (level, j) {
       cellsPassive.append("rect")
         .attr("id", subject + level.toString())
         .attr("data-subject", subject)
@@ -142,14 +149,14 @@ d3.csv(subjectDataFile).then(function(data) {
       .attr("y2", function(d) { return y(d["Subject"]) })
 });
 
-d3.csv(gpaDataFile).then(function(data) {
+d3.csv(Globals.gpaDataFile).then(function(data) {
   data.forEach(function(d) {
     d["Number"] = +d["Number"];
     d["Year"] = +d["Year"];
 
     if(!years.includes(d["Year"])) years.push(d["Year"]);
 
-    grades.forEach(function(grade) {
+    Globals.grades.forEach(function(grade) {
       d[grade] = +d[grade];
     });
 
@@ -158,7 +165,7 @@ d3.csv(gpaDataFile).then(function(data) {
     }
 
     let total = 0;
-    grades.forEach(function(grade) {
+    Globals.grades.forEach(function(grade) {
       total += d[grade];
     });
 
@@ -167,16 +174,24 @@ d3.csv(gpaDataFile).then(function(data) {
 
   years.sort();
   rawData = data;
+  barChart = new BarChart(data);
 
-  initNavBar();
+  navBar.initNavBar(years);
+  navBar.addYearSliderCallback(yearUpdated);
+
   updateData();
+  drawCourses();
 });
 
-function updateData() {
-  let maxTotal = 0;
-  let minTotal = 20;
+function yearUpdated(val, start, end) {
+  startYear = start;
+  endYear = end;
+  updateData();
+  drawCourses();
+}
 
-  let filteredData = rawData
+function updateData() {
+  filteredData = rawData
     .filter(d => d["Year"] >= startYear)
     .filter(d => d["Year"] <= endYear)
     .filter(d => d["Subject"] in subjects);
@@ -208,7 +223,9 @@ function updateData() {
     maxTotal = (total > maxTotal) ? total : maxTotal;
     minTotal = (total < minTotal) ? total : minTotal;
   });
+}
 
+function drawCourses() {
   courseList = Object.values(courses);
 
   // set subject scale
@@ -227,54 +244,14 @@ function updateData() {
     .attr("r", function(d) { return r(d["Total"]) });
 }
 
-function initNavBar() {
-  console.log(years);
-  let yearRow = navGrid.append("div")
-    .attr("class", "centered row");
-
-  let yearSliderCell = yearRow.append("div")
-    .attr("class", "eight wide column");
-
-  yearSliderCell.append("div")
-    .attr("class", "ui labeled ticked range slider")
-    .attr("id", "yearSlider");
-
-  let yearSlider = $("#yearSlider");
-  yearSlider.slider({
-    min: years[0],
-    max: years[years.length - 1],
-    start: startYear,
-    end: endYear,
-    step: 1,
-    onChange: yearSliderUpdated
-  });
-
-/*
-  let termRow = navGrid.append("div")
-    .attr("class", "centered row");
-
-  let termCell = termRow.append("div")
-    .attr("class", "eight wide column");
-
-  termCell.append("div")
-    .attr("class", "ui dropdown");
-*/
-}
-
-function yearSliderUpdated(val, start, end) {
-  startYear = start;
-  endYear = end;
-  updateData();
-}
-
 function showBarChart(query) {
   query.startYear = startYear;
   query.endYear = endYear;
 
   d3.select("div#content").selectAll("*").remove();
   debugText.selectAll("*").remove();
-  initChart(rawData);
-  showChart(query);
+  barChart.initChart(rawData);
+  barChart.showChart(query);
 }
 
 function handleMouseOver() {

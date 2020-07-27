@@ -8,6 +8,13 @@ const classLevels = [100, 200, 300, 400, 500];
 const gpaDataFile = "data/uiuc-gpa-dataset.txt";
 const subjectDataFile = "data/subjects.txt";
 
+function GlobalData() {
+  this.grades = grades;
+  this.classLevels = classLevels;
+  this.gpaDataFile = gpaDataFile;
+  this.subjectDataFile = subjectDataFile;
+}
+
 function Query(startYear, endYear, subject, number, title) {
   this.startYear = startYear;
   this.endYear = endYear;
@@ -17,9 +24,11 @@ function Query(startYear, endYear, subject, number, title) {
 }
 
 export {
-  grades,
-  classLevels,
-  gpaDataFile,
-  subjectDataFile,
+  GlobalData,
   Query
 };
+
+const instance = new GlobalData();
+Object.freeze(instance);
+
+export default instance;

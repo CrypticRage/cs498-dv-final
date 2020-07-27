@@ -1,4 +1,5 @@
-import { grades } from "./globals.js";
+import Globals, { Query } from "./globals.js";
+import navBar from "./navbar.js";
 
 let baseMargin = 30;
 
@@ -11,16 +12,15 @@ let margin = {
 
 let grid = null;
 let leftMenu = null;
+let termList = null;
 let barChart = null;
 let svg = null;
 
-let svgWidth = 900;
-let svgHeight = 600;
+let svgWidth = 800;
+let svgHeight = 500;
 
 let chartWidth = svgWidth - margin.left - margin.right;
 let chartHeight = svgHeight - margin.top - margin.bottom;
-
-let data = null;
 
 // set the ranges
 let x = d3.scaleBand()
@@ -30,9 +30,35 @@ let x = d3.scaleBand()
 let y = d3.scaleLinear()
   .range([chartHeight, 0]);
 
-function initChart(d) {
-  data = d;
+function BarChart(d) {
+  this.data = d;
+  this.query = null;
 
+  this.initChart = initChart;
+  this.showMenu = showMenu;
+  this.showChart = showChart;
+  this.clearChart = clearChart;
+  this.yearUpdated = yearUpdated;
+}
+
+function yearUpdated(parent) {
+  return function(val, start, end) {
+    let query = parent.query;
+    query.startYear = start;
+    query.endYear = end;
+
+    let filteredData = parent.data
+      .filter(d => d["Year"] >= query.startYear)
+      .filter(d => d["Year"] <= query.endYear)
+      .filter(d => d["Subject"] === query.subject)
+      .filter(d => d["Number"] === +query.number)
+      .filter(d => d["Course Title"] === query.title);
+
+    parent.showMenu(filteredData);
+  }
+}
+
+function initChart() {
   grid = d3.select("div#content")
     .append("div")
     .attr("id", "grid")
@@ -53,14 +79,18 @@ function initChart(d) {
     .attr("transform", "translate(0, 0)")
     .attr("width", svgWidth)
     .attr("height", svgHeight);
-}
 
-function showMenu(queryData) {
-  let list = leftMenu.append("div")
+  termList = leftMenu.append("div")
     .attr("class", "ui list");
 
-  let items = list.selectAll("div")
-    .data(queryData)
+  navBar.addYearSliderCallback(yearUpdated(this));
+}
+
+function showMenu(filteredData) {
+  termList.selectAll("*").remove();
+
+  let items = termList.selectAll("div")
+    .data(filteredData)
     .enter()
     .append("div")
     .attr("class", "item");
@@ -79,21 +109,23 @@ function showMenu(queryData) {
     .text(d => d["Year"] + " " + d["Term"]);
 }
 
-function showChart(query) {
-  let queryData = data
-    .filter(d => d["Year"] >= query.startYear)
-    .filter(d => d["Year"] <= query.endYear)
-    .filter(d => d["Subject"] === query.subject)
-    .filter(d => d["Number"] === +query.number)
-    .filter(d => d["Course Title"] === query.title);
+function showChart(q) {
+  this.query = q;
 
-  showMenu(queryData);
-  let testData = queryData[0];
+  let filteredData = this.data
+    .filter(d => d["Year"] >= this.query.startYear)
+    .filter(d => d["Year"] <= this.query.endYear)
+    .filter(d => d["Subject"] === this.query.subject)
+    .filter(d => d["Number"] === +this.query.number)
+    .filter(d => d["Course Title"] === this.query.title);
+
+  showMenu(filteredData);
+  let testData = filteredData[0];
 
   // https://stackoverflow.com/questions/38750705/filter-object-properties-by-key-in-es6
   const filteredObject = Object
     .keys(testData)
-    .filter(key => grades.includes(key));
+    .filter(key => Globals.grades.includes(key));
 
   let maxCount = 0;
   let filteredArray = [];
@@ -106,8 +138,8 @@ function showChart(query) {
     }
   );
 
-  console.log(filteredArray);
-  console.log(filteredObject);
+  console.log("filteredData");
+  console.log(filteredData);
 
   svg.append("rect")
     .attr("class", "barChartBackground")
@@ -119,7 +151,7 @@ function showChart(query) {
     .attr("height", svgHeight)
 
   // scale the range of the data in the domains
-  x.domain(grades);
+  x.domain(Globals.grades);
   y.domain([0, maxCount * 1.05]);
 
   console.log(maxCount);
@@ -135,9 +167,9 @@ function showChart(query) {
     .enter()
     .append("rect")
       .attr("class", "bar")
-      .attr("x", function(d, i) { return x(d["Grade"]); })
+      .attr("x", function(d) { return x(d["Grade"]); })
       .attr("width", x.bandwidth())
-      .attr("y", function(d, i) { return y(d["Count"]); })
+      .attr("y", function(d) { return y(d["Count"]); })
       .attr("height", function(d) { return chartHeight - y(d["Count"]); })
       .attr("rx", 3)
       .attr("ry", 3);
@@ -157,4 +189,4 @@ function clearChart() {
 
 }
 
-export { initChart, clearChart, showChart };
+export { BarChart };
