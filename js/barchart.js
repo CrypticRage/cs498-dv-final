@@ -1,36 +1,85 @@
 import { grades } from "./globals.js";
 
-const barChart = d3.select("svg")
-  .append("g")
-    .attr("class", "barChart");
-    // .attr("transform", "translate(50%, 50%)");
+let baseMargin = 30;
 
 let margin = {
-  top: 20,
-  right: 20,
-  bottom: 20,
-  left: 20
+  top: baseMargin,
+  right: baseMargin,
+  bottom: baseMargin,
+  left: baseMargin
 };
 
-let width = 1000 - margin.left - margin.right;
-let height = 700 - margin.top - margin.bottom;
+let grid = null;
+let leftMenu = null;
+let barChart = null;
+let svg = null;
+
+let svgWidth = 900;
+let svgHeight = 600;
+
+let chartWidth = svgWidth - margin.left - margin.right;
+let chartHeight = svgHeight - margin.top - margin.bottom;
 
 let data = null;
 
 // set the ranges
 let x = d3.scaleBand()
-  .range([0, width]);
+  .range([0, chartWidth])
+  .padding(0.1);
 
 let y = d3.scaleLinear()
-  .range([height, 0]);
+  .range([chartHeight, 0]);
 
 function initChart(d) {
   data = d;
+
+  grid = d3.select("div#content")
+    .append("div")
+    .attr("id", "grid")
+    .attr("class", "ui middle aligned sixteen column grid");
+
+  leftMenu = grid
+    .append("div")
+    .attr("id", "leftMenu")
+    .attr("class", "right aligned three wide column");
+
+  barChart = grid
+    .append("div")
+    .attr("id", "barChart")
+    .attr("class", "left aligned thirteen wide column");
+
+  svg = barChart
+    .append("svg")
+    .attr("transform", "translate(0, 0)")
+    .attr("width", svgWidth)
+    .attr("height", svgHeight);
+}
+
+function showMenu(queryData) {
+  let list = leftMenu.append("div")
+    .attr("class", "ui list");
+
+  let items = list.selectAll("div")
+    .data(queryData)
+    .enter()
+    .append("div")
+    .attr("class", "item");
+
+  let checks = items
+    .append("button")
+    .attr("class", "ui toggle checkbox")
+    .attr("width", 100);
+
+  checks.append("input")
+    .attr("type", "checkbox")
+    .attr("name", "public");
+
+  checks.append("label")
+    .attr("type", "checkbox")
+    .text(d => d["Year"] + " " + d["Term"]);
 }
 
 function showChart(query) {
-  console.log(data);
-
   let queryData = data
     .filter(d => d["Year"] >= query.startYear)
     .filter(d => d["Year"] <= query.endYear)
@@ -38,58 +87,69 @@ function showChart(query) {
     .filter(d => d["Number"] === +query.number)
     .filter(d => d["Course Title"] === query.title);
 
-  console.log(query);
-  console.log(queryData);
+  showMenu(queryData);
   let testData = queryData[0];
 
   // https://stackoverflow.com/questions/38750705/filter-object-properties-by-key-in-es6
-  const filteredData = Object
-    .values(Object
-      .keys(testData)
-      .filter(key => grades.includes(key))
-      .reduce((obj, key) => {
-        obj[key] = testData[key];
-        return obj;
-      }, {})
+  const filteredObject = Object
+    .keys(testData)
+    .filter(key => grades.includes(key));
+
+  let maxCount = 0;
+  let filteredArray = [];
+  filteredObject.forEach(key => {
+      let obj = {};
+      obj["Grade"] = key;
+      obj["Count"] = testData[key];
+      maxCount = testData[key] > maxCount ? testData[key] : maxCount;
+      filteredArray.push(obj);
+    }
   );
 
-  console.log(filteredData);
+  console.log(filteredArray);
+  console.log(filteredObject);
 
-  barChart.append("rect")
+  svg.append("rect")
     .attr("class", "barChartBackground")
-    .attr("x", margin.left)
-    .attr("y", margin.top)
+    .attr("x", 0)
+    .attr("y", 0)
     .attr("rx", 10)
     .attr("ry", 10)
-    .attr("width", width)
-    .attr("height", height)
-
+    .attr("width", svgWidth)
+    .attr("height", svgHeight)
 
   // scale the range of the data in the domains
   x.domain(grades);
-  y.domain([0, Math.max.apply(null, filteredData)]);
+  y.domain([0, maxCount * 1.05]);
 
-  console.log(Math.max.apply(null, filteredData));
+  console.log(maxCount);
+
+  const bars = d3.select("svg")
+    .append("g")
+    .attr("id", "bars")
+    .attr("transform", "translate(" + margin.left + ", " + margin.top + ")");
 
   // append the rectangles for the bar chart
-  barChart.selectAll(".bar")
-    .data(testData)
+  bars.selectAll(".bar")
+    .data(filteredArray)
     .enter()
     .append("rect")
       .attr("class", "bar")
-      .attr("x", function(d, i) { return grades[i]; })
+      .attr("x", function(d, i) { return x(d["Grade"]); })
       .attr("width", x.bandwidth())
-      .attr("y", function(d, i) { return d[grades[i]]; })
-      .attr("height", function(d) { return height - y(d); });
+      .attr("y", function(d, i) { return y(d["Count"]); })
+      .attr("height", function(d) { return chartHeight - y(d["Count"]); })
+      .attr("rx", 3)
+      .attr("ry", 3);
 
   // add the x Axis
-  barChart.append("g")
-    .attr("transform", "translate(0, " + height + ")")
+  svg.append("g")
+    .attr("transform", "translate(" + margin.left + ", " + (chartHeight + margin.top) + ")")
     .call(d3.axisBottom(x));
 
   // add the y Axis
-  barChart.append("g")
-    .attr("transform", "translate(" + margin.left + ", 0)")
+  svg.append("g")
+    .attr("transform", "translate(" + margin.left + ", " + margin.top + ")")
     .call(d3.axisLeft(y));
 }
 

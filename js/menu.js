@@ -1,41 +1,43 @@
 import { Query } from "./globals.js";
 
-const menu = d3.select("#menu");
-
 let itemHeight = 22;
 let itemWidth = 0;
 
-let handleMenuItemClick = null;
+function Menu(parent, clickCallback) {
+  this.parent = parent;
+  this.init = init;
+  this.clear = clear;
+  this.clickCallback = clickCallback;
 
-function setCallback(callback) {
-  handleMenuItemClick = callback;
+  this.menu = parent.append("g")
+    .attr("class", "menu");
 }
 
-function initMenu(cellPassive, courseList, baseTransform) {
+function init(cellPassive, courseList, baseTransform) {
   let subject = cellPassive.attr("data-subject");
-  let level = parseInt(cellPassive.attr("data-level"));
-  let x = parseInt(cellPassive.attr("x"));
-  let y = parseInt(cellPassive.attr("y")) + parseInt(cellPassive.attr("height")) / 2.0;
+  let level = +cellPassive.attr("data-level");
+  let x = +cellPassive.attr("x");
+  let y = +cellPassive.attr("y") + +cellPassive.attr("height") / 2.0;
 
-  itemWidth = parseInt(cellPassive.attr("width"));
+  itemWidth = +cellPassive.attr("width");
 
-  menu.attr("transform", "translate(" + x + "," + y + ") " + baseTransform);
-  clearMenu();
+  this.menu.attr("transform", "translate(" + x + "," + y + ") " + baseTransform);
+  this.clear();
 
-  let menuSelect = menu.selectAll(".menuItem")
+  let menuSelect = this.menu.selectAll(".menuItem")
     .data(courseList)
     .enter()
-    .filter(function(d) { return d["Subject"] === subject })
-    .filter(function(d) { return (d["Number"] >= level) && (d["Number"] <= level + 99) })
+    .filter((d) => d["Subject"] === subject)
+    .filter((d) => (d["Number"] >= level) && (d["Number"] <= level + 99))
     .append("g")
       .attr("class", "menuItem")
-      .attr("id", function(d) { return d["Subject"] + d["Number"] })
-      .attr("data-subject", function(d) { return d["Subject"] })
-      .attr("data-number", function(d) { return d["Number"] })
-      .attr("data-title", function(d) { return d["Title"] })
+      .attr("id", (d) => d["Subject"] + d["Number"])
+      .attr("data-subject", (d) => d["Subject"])
+      .attr("data-number", (d) => d["Number"])
+      .attr("data-title", (d) => d["Title"])
       .on("mouseover", handleMouseOver)
       .on("mouseout", handleMouseOut)
-      .on("click", handleClick);
+      .on("click", handleClick(this));
 
   menuSelect.append("rect")
     .attr("class", "menuItemRect")
@@ -51,8 +53,8 @@ function initMenu(cellPassive, courseList, baseTransform) {
     .text(menuText);
 }
 
-function clearMenu() {
-  menu.selectAll(".menuItem").remove();
+function clear() {
+  this.menu.selectAll(".menuItem").remove();
 }
 
 function menuText(d) {
@@ -61,7 +63,7 @@ function menuText(d) {
 
 function handleMouseOver() {
   let menuItem = d3.select(this);
-  let menuItemRect = d3.select(this).select("rect");
+  let menuItemRect = menuItem.select("rect");
   menuItemRect.attr("class", "menuItemRect over");
 
   let circles = d3.select("g#circles");
@@ -71,7 +73,7 @@ function handleMouseOver() {
 
 function handleMouseOut() {
   let menuItem = d3.select(this);
-  let menuItemRect = d3.select(this).select("rect");
+  let menuItemRect = menuItem.select("rect");
   menuItemRect.attr("class", "menuItemRect");
 
   let circles = d3.select("g#circles");
@@ -79,16 +81,18 @@ function handleMouseOut() {
   courseCircle.attr("class", "course");
 }
 
-function handleClick() {
-  let menuItem = d3.select(this);
-  let subject = menuItem.attr("data-subject");
-  let number = +menuItem.attr("data-number");
-  let title = menuItem.attr("data-title");
+function handleClick(parentMenu) {
+  // https://www.jstips.co/en/javascript/passing-arguments-to-callback-functions/
+  return function () {
+    let menuItem = d3.select(this);
+    let subject = menuItem.attr("data-subject");
+    let number = +menuItem.attr("data-number");
+    let title = menuItem.attr("data-title");
 
-  let testYear = 2018;
-  let query = new Query(2015, testYear, subject, number, title);
+    let query = new Query(0, 0, subject, number, title);
 
-  handleMenuItemClick(query);
+    parentMenu.clickCallback(query);
+  }
 }
 
-export { initMenu, clearMenu, setCallback };
+export { Menu };

@@ -1,12 +1,13 @@
-import { initMenu, clearMenu, setCallback } from "./menu.js";
+import { Menu } from "./menu.js";
 import { initChart, clearChart, showChart } from "./barchart.js";
 import { grades, classLevels, gpaDataFile, subjectDataFile, Query } from "./globals.js";
 
+const years = [];
 const terms = {};
 const subjects = {};
-const courses = {};
 
 let rawData = null;
+let courses = {};
 let courseList = [];
 let subjectKeys = [];
 
@@ -19,13 +20,16 @@ var yLabelPad = 5.0;
 
 var margin = {
   top: maxRadius + xLabelHeight,
-  right: maxRadius,
-  bottom: maxRadius,
+  right: 20.0,
+  bottom: 20.0,
   left: maxRadius + yLabelWidth
 };
 
 var width = 1200 - margin.left - margin.right;
 var height = 1500 - margin.top - margin.bottom;
+
+let startYear = 2014;
+let endYear = 2015;
 
 // set the ranges
 var x = d3.scaleLinear()
@@ -35,35 +39,45 @@ var x = d3.scaleLinear()
 var y = d3.scaleBand()
   .range([0, height]);
 
-var r = d3.scaleLinear()
-  .range([maxRadius / 10.0, maxRadius])
+var r = d3.scaleLog()
+  .base(10)
+  .range([2, maxRadius])
 
 var cellHeight = maxRadius * 2.0;
 var cellWidth = x(classLevels[1]);
 
-// grab all the svg elements
-const diagram = d3.select("svg")
-diagram
-  .attr("width", width + margin.left + margin.right)
-  .attr("height", height + margin.top + margin.bottom);
+const navGrid = d3.select("div#navGrid");
+const content = d3.select("div#content");
+const debugText = d3.select("div#debug");
 
-const grid = d3.select("#grid")
-  .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+const chart = content.append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom);
 
-const cellsPassive = d3.select("#cellsPassive")
+const cellsPassive = chart.append("g")
+  .attr("id", "cellsPassive")
   .attr("transform", "translate(" + margin.left + "," + xLabelHeight + ")");
 
-const mainBody = d3.select("#mainBody")
+const grid = chart.append("g")
+  .attr("id", "grid")
   .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-const cellsActive = d3.select("#cellsActive")
+const body = chart.append("g")
+  .attr("id", "body")
+  .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+const circles = body.append("g")
+  .attr("id", "circles")
+
+const cellsActive = chart.append("g")
+  .attr("id", "cellsActive")
   .attr("transform", "translate(" + margin.left + "," + xLabelHeight + ")");
 
-const labels = d3.select("#labels")
+const labels = chart.append("g")
+  .attr("id", "labels")
   .attr("transform", "translate(" + 0 + "," + 0 + ")");
 
-const circles = d3.select("#mainBody").select("#circles");
-const debugText = d3.select("#debug");
+const menu = new Menu(chart, showBarChart);
 
 let currentCellSelection = "";
 
@@ -128,67 +142,138 @@ d3.csv(subjectDataFile).then(function(data) {
       .attr("y2", function(d) { return y(d["Subject"]) })
 });
 
-let testList = [];
-let testString = "";
-let testObject = Object.create(null);
-let testInt = 0;
-let maxTotal = 0;
-
 d3.csv(gpaDataFile).then(function(data) {
   data.forEach(function(d) {
     d["Number"] = +d["Number"];
     d["Year"] = +d["Year"];
 
+    if(!years.includes(d["Year"])) years.push(d["Year"]);
+
     grades.forEach(function(grade) {
-      d[grade] = + d[grade];
+      d[grade] = +d[grade];
     });
 
     if (!(d["YearTerm"] in terms)) {
       terms[d["YearTerm"]] = {"Year": d["Year"], "Term": d["Term"]};
     }
 
-    if (d["Year"] === 2018) {
-      const key = d["Subject"] + ":" + d["Number"].toString() + ":" + d["Course Title"];
+    let total = 0;
+    grades.forEach(function(grade) {
+      total += d[grade];
+    });
 
-      let total = 0;
-      grades.forEach(function(grade) {
-        total += d[grade];
-      });
-
-      if (key in courses) {
-        courses[key]["Total"] += total;
-        total = courses[key]["Total"];
-      }
-      else {
-        courses[key] =
-          {"Subject": d["Subject"], "Number": d["Number"], "Title": d["Course Title"], "Total": total};
-      }
-
-      if (d["Subject"] in subjects) maxTotal = (total > maxTotal) ? total : maxTotal;
-    }
+    d["Total"] = total;
   });
 
+  years.sort();
   rawData = data;
+
+  initNavBar();
+  updateData();
+});
+
+function updateData() {
+  let maxTotal = 0;
+  let minTotal = 20;
+
+  let filteredData = rawData
+    .filter(d => d["Year"] >= startYear)
+    .filter(d => d["Year"] <= endYear)
+    .filter(d => d["Subject"] in subjects);
+
+  let filteredTerms = [];
+
+  filteredData.forEach(d => {
+    if (!filteredTerms.includes(d["YearTerm"])) filteredTerms.push(d["YearTerm"]);
+  });
+  filteredTerms = Object.keys(terms)
+    .filter(d => filteredTerms.includes(d));
+
+  console.log(filteredData);
+  console.log(filteredTerms);
+
+  courses = [];
+  filteredData.forEach(function(d) {
+    const key = d["Subject"] + ":" + d["Number"].toString() + ":" + d["Course Title"];
+    let total = d["Total"];
+
+    if (key in courses) {
+      courses[key]["Total"] += total;
+      total = courses[key]["Total"];
+    } else {
+      courses[key] =
+        {"Subject": d["Subject"], "Number": d["Number"], "Title": d["Course Title"], "Total": total};
+    }
+
+    maxTotal = (total > maxTotal) ? total : maxTotal;
+    minTotal = (total < minTotal) ? total : minTotal;
+  });
+
   courseList = Object.values(courses);
-  initChart(data);
 
   // set subject scale
-  r.domain([0, maxTotal]);
+  r.domain([minTotal, maxTotal]);
 
   // add the circles to the chart
+  circles.selectAll(".course").remove();
   circles.selectAll(".course")
     .data(courseList)
     .enter()
-    .filter(function(d) { return d["Subject"] in subjects })
     .append("circle")
     .attr("class", "course")
     .attr("id", function(d) { return d["Subject"] + d["Number"] })
-    .attr("cx", function(d) { return x(parseInt(d["Number"])); })
+    .attr("cx", function(d) { return x(d["Number"]); })
     .attr("cy", function(d) { return y(d["Subject"]); })
-    .attr("r", function(d) { return r(d["Total"]); });
-});
+    .attr("r", function(d) { return r(d["Total"]) });
+}
+
+function initNavBar() {
+  console.log(years);
+  let yearRow = navGrid.append("div")
+    .attr("class", "centered row");
+
+  let yearSliderCell = yearRow.append("div")
+    .attr("class", "eight wide column");
+
+  yearSliderCell.append("div")
+    .attr("class", "ui labeled ticked range slider")
+    .attr("id", "yearSlider");
+
+  let yearSlider = $("#yearSlider");
+  yearSlider.slider({
+    min: years[0],
+    max: years[years.length - 1],
+    start: startYear,
+    end: endYear,
+    step: 1,
+    onChange: yearSliderUpdated
+  });
+
+/*
+  let termRow = navGrid.append("div")
+    .attr("class", "centered row");
+
+  let termCell = termRow.append("div")
+    .attr("class", "eight wide column");
+
+  termCell.append("div")
+    .attr("class", "ui dropdown");
+*/
+}
+
+function yearSliderUpdated(val, start, end) {
+  startYear = start;
+  endYear = end;
+  updateData();
+}
 
 function showBarChart(query) {
+  query.startYear = startYear;
+  query.endYear = endYear;
+
+  d3.select("div#content").selectAll("*").remove();
+  debugText.selectAll("*").remove();
+  initChart(rawData);
   showChart(query);
 }
 
@@ -212,7 +297,7 @@ function handleClick() {
   if (currentCellSelection && (currentCellSelection === this.id)) {
     cellPassive.attr("class", "cell passive");
     currentCellSelection = "";
-    clearMenu();
+    menu.clear();
     return;
   }
   else if (currentCellSelection) {
@@ -221,8 +306,7 @@ function handleClick() {
   }
 
   cellPassive.attr("class", "cell passive click");
-  setCallback(showBarChart);
-  initMenu(cellPassive, courseList, mainBody.attr("transform"));
+  menu.init(cellPassive, courseList, body.attr("transform"));
 
   let subject = cellPassive.attr("data-subject");
   let level = +cellPassive.attr("data-level");

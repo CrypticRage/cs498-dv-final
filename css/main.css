@@ -110,8 +110,8 @@ line.yLine {
 }
 
 circle.course {
-  fill-opacity: .15;
-  fill: black;
+  fill-opacity: .20;
+  fill: #000000;
 }
 
 circle.course.over {
@@ -125,20 +125,21 @@ rect.cell.active {
 
 rect.cell.passive {
   fill: #555555;
-  opacity: 0.2;
+  opacity: 0.1;
 }
 
 rect.cell.passive.over {
-  opacity: 0.65;
+  fill: #cbeaff;
+  opacity: 0.50;
 }
 
 rect.cell.passive.click {
-  fill: #95ccec;
+  fill: #cbeaff;
   opacity: 1.0;
 }
 
 rect.menuItemRect {
-  fill: #95ccec;
+  fill: #cbeaff;
   opacity: 1.0;
 }
 
@@ -156,10 +157,8 @@ text.menuItemText {
 }
 
 rect.barChartBackground {
-  fill: #aaabb3;
-  opacity: 1.0;
-  stroke: #c9c883;
-  stroke-width: 1;
+  fill: #dcdce6;
+  opacity: 0.65;
 }
 
 rect.bar { fill: steelblue; }

@@ -5,8 +5,8 @@ const grades = [
 
 const classLevels = [100, 200, 300, 400, 500];
 
-const gpaDataFile = "data/uiuc-gpa-dataset.txt"
-const subjectDataFile = "data/subjects.txt"
+const gpaDataFile = "data/uiuc-gpa-dataset.txt";
+const subjectDataFile = "data/subjects.txt";
 
 function Query(startYear, endYear, subject, number, title) {
   this.startYear = startYear;
