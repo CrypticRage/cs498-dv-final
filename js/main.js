@@ -1,6 +1,5 @@
 import { Menu } from "./menu.js";
 import { BarChart } from "./barchart.js";
-import { Query } from "./globals.js";
 import Globals from "./globals.js";
 import navBar from "./navbar.js";
 
@@ -150,7 +149,9 @@ d3.csv(Globals.subjectDataFile).then(function(data) {
 });
 
 d3.csv(Globals.gpaDataFile).then(function(data) {
+  let i = 0;
   data.forEach(function(d) {
+    d["ID"] = i++;
     d["Number"] = +d["Number"];
     d["Year"] = +d["Year"];
 
@@ -164,12 +165,7 @@ d3.csv(Globals.gpaDataFile).then(function(data) {
       terms[d["YearTerm"]] = {"Year": d["Year"], "Term": d["Term"]};
     }
 
-    let total = 0;
-    Globals.grades.forEach(function(grade) {
-      total += d[grade];
-    });
-
-    d["Total"] = total;
+    d["Total"] = d3.sum(Globals.grades, g => d[g]);
   });
 
   years.sort();
@@ -195,17 +191,6 @@ function updateData() {
     .filter(d => d["Year"] >= startYear)
     .filter(d => d["Year"] <= endYear)
     .filter(d => d["Subject"] in subjects);
-
-  let filteredTerms = [];
-
-  filteredData.forEach(d => {
-    if (!filteredTerms.includes(d["YearTerm"])) filteredTerms.push(d["YearTerm"]);
-  });
-  filteredTerms = Object.keys(terms)
-    .filter(d => filteredTerms.includes(d));
-
-  console.log(filteredData);
-  console.log(filteredTerms);
 
   courses = [];
   filteredData.forEach(function(d) {
@@ -250,8 +235,8 @@ function showBarChart(query) {
 
   d3.select("div#content").selectAll("*").remove();
   debugText.selectAll("*").remove();
-  barChart.initChart(rawData);
-  barChart.showChart(query);
+  barChart.initChart();
+  barChart.setQuery(query);
 }
 
 function handleMouseOver() {

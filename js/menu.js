@@ -81,8 +81,8 @@ function handleMouseOut() {
   courseCircle.attr("class", "course");
 }
 
-function handleClick(parentMenu) {
-  // https://www.jstips.co/en/javascript/passing-arguments-to-callback-functions/
+// https://www.jstips.co/en/javascript/passing-arguments-to-callback-functions/
+function handleClick(parent) {
   return function () {
     let menuItem = d3.select(this);
     let subject = menuItem.attr("data-subject");
@@ -91,7 +91,7 @@ function handleClick(parentMenu) {
 
     let query = new Query(0, 0, subject, number, title);
 
-    parentMenu.clickCallback(query);
+    parent.clickCallback(query);
   }
 }
 

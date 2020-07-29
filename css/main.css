@@ -156,12 +156,34 @@ text.menuItemText {
   pointer-events: none;
 }
 
-rect.barChartBackground {
-  fill: #dcdce6;
-  opacity: 0.65;
+rect#barChartBackground {
+  fill: #5e5e5e;
+  opacity: 0.25;
 }
 
 rect.bar { fill: steelblue; }
+
+g.tooltip > rect {
+  opacity: 0.5;
+  fill: lightgray;
+  stroke: black;
+  stroke-width: 0.5;
+}
+
+g.tooltip > text {
+  text-anchor: middle;
+  dominant-baseline: middle;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+div#leftMenu {
+  padding-left: 40px;
+}
+
+.checkbox .box:after {
+  color: #762786;
+}
 
 /* ==========================================================================
    Helper classes
