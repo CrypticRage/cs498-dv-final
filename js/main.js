@@ -29,9 +29,6 @@ var margin = {
 var width = 1100 - margin.left - margin.right;
 var height = 1500 - margin.top - margin.bottom;
 
-let startYear = 2014;
-let endYear = 2015;
-
 let maxTotal = 0;
 let minTotal = 20;
 
@@ -54,8 +51,8 @@ const content = d3.select("div#content");
 const debugText = d3.select("div#debug");
 
 const chart = content.append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom);
+  .attr("width", width + margin.left + margin.right)
+  .attr("height", height + margin.top + margin.bottom);
 
 const cellsPassive = chart.append("g")
   .attr("id", "cellsPassive")
@@ -180,16 +177,14 @@ d3.csv(Globals.gpaDataFile).then(function(data) {
 });
 
 function yearUpdated(val, start, end) {
-  startYear = start;
-  endYear = end;
   updateData();
   drawCourses();
 }
 
 function updateData() {
   filteredData = rawData
-    .filter(d => d["Year"] >= startYear)
-    .filter(d => d["Year"] <= endYear)
+    .filter(d => d["Year"] >= navBar.startYear())
+    .filter(d => d["Year"] <= navBar.endYear())
     .filter(d => d["Subject"] in subjects);
 
   courses = [];
@@ -212,6 +207,7 @@ function updateData() {
 
 function drawCourses() {
   courseList = Object.values(courses);
+  console.log(courseList);
 
   // set subject scale
   r.domain([minTotal, maxTotal]);
@@ -230,8 +226,8 @@ function drawCourses() {
 }
 
 function showBarChart(query) {
-  query.startYear = startYear;
-  query.endYear = endYear;
+  query.startYear = navBar.startYear();
+  query.endYear = navBar.endYear();
 
   d3.select("div#content").selectAll("*").remove();
   debugText.selectAll("*").remove();

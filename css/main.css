@@ -87,11 +87,6 @@ textarea {
    Author's custom styles
    ========================================================================== */
 
-svg {
-  margin: auto;
-  display: block;
-}
-
 text.subject {
   text-anchor: end;
   alignment-baseline: middle;
@@ -163,26 +158,28 @@ rect#barChartBackground {
 
 rect.bar { fill: steelblue; }
 
+g.tooltip {
+  pointer-events: none;
+  alignment-baseline: middle;
+}
+
 g.tooltip > rect {
-  opacity: 0.5;
-  fill: lightgray;
-  stroke: black;
-  stroke-width: 0.5;
+  opacity: 0.85;
+  fill: #f1f1f1;
 }
 
 g.tooltip > text {
   text-anchor: middle;
-  dominant-baseline: middle;
   font-size: 13px;
   font-weight: bold;
 }
 
 div#leftMenu {
-  padding-left: 40px;
+  padding-top: 30px;
 }
 
-.checkbox .box:after {
-  color: #762786;
+.ui.toggle.checkbox  {
+  stroke-width: 2.0;
 }
 
 /* ==========================================================================

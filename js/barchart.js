@@ -1,32 +1,34 @@
+// https://observablehq.com/@d3/stacked-bar-chart
+// https://observablehq.com/@d3/styled-axes
+// https://observablehq.com/@d3/working-with-color
+
 import Globals, { Query } from "./globals.js";
 import navBar from "./navbar.js";
 
-let baseMargin = 30;
-
 let margin = {
-  top: baseMargin,
-  right: baseMargin,
-  bottom: baseMargin,
-  left: baseMargin
+  top: 10,
+  right: 0,
+  bottom: 20,
+  left: 15
 };
 
+let buttons = null;
 let grid = null;
 let leftMenu = null;
 let termList = null;
 let barChart = null;
 let svg = null;
+let axis = null;
 let bars = null;
 let tooltip = null;
 let header = null;
+let color = null;
 
-let svgWidth = 800;
+let svgWidth = 650;
 let svgHeight = 500;
 
 let tooltipWidth = 30;
-let tooltipHeight = 25;
-
-let chartWidth = svgWidth - margin.left - margin.right;
-let chartHeight = svgHeight - margin.top - margin.bottom;
+let tooltipHeight = 20;
 
 function BarChart(data) {
   this.data = data;
@@ -48,29 +50,39 @@ function initChart() {
   grid = d3.select("div#content")
     .append("div")
     .attr("id", "grid")
-    .attr("class", "ui middle aligned sixteen column grid");
+    .attr("class", "ui grid");
 
-  header = grid.append("div")
+  let row = grid;
+  // let row = grid.append("div")
+  //  .attr("class", "centered row");
+
+  row.append("div")
+    .attr("class", "one wide column");
+
+  leftMenu = row
+    .append("div")
+    .attr("id", "leftMenu")
+    .attr("class", "left aligned four wide column");
+
+  barChart = row
+    .append("div")
+    .attr("id", "barChart")
+    .attr("class", "ten wide column");
+
+  header = barChart.append("div")
     .attr("class", "centered row");
   header.append("h2")
     .attr("id", "headerText");
 
-  leftMenu = grid
-    .append("div")
-    .attr("id", "leftMenu")
-    .attr("class", "left aligned five wide column");
-
-  barChart = grid
-    .append("div")
-    .attr("id", "barChart")
-    .attr("class", "left aligned eleven wide column");
-
-  svg = barChart
+  let svgCell = barChart.append("div")
+    .attr("class", "row");
+  svg = svgCell
     .append("svg")
-    .attr("transform", "translate(0, 0)")
-    .attr("width", svgWidth)
-    .attr("height", svgHeight);
+    .attr("width", "auto")
+    // .attr("height", "auto")
+    .attr("viewBox", [0, 0, svgWidth, svgHeight]);
 
+/*
   svg.append("rect")
     .attr("id", "barChartBackground")
     .attr("x", 0)
@@ -79,6 +91,11 @@ function initChart() {
     .attr("ry", 10)
     .attr("width", svgWidth)
     .attr("height", svgHeight);
+*/
+
+  axis = svg
+    .append("g")
+    .attr("id", "axisLabels")
 
   bars = svg.append("g")
     .attr("id", "bars");
@@ -95,10 +112,15 @@ function initChart() {
 
   tooltip.append("text")
     .attr("x", tooltipWidth / 2.0)
-    .attr("y", tooltipWidth / 2.0);
+    .attr("y", tooltipWidth / 2.0)
+    .attr("width", tooltipWidth)
+    .attr("height", tooltipHeight);
 
   termList = leftMenu.append("div")
-    .attr("class", "ui list");
+    .attr("class", "ui form");
+  termList = termList.append("div")
+    .attr("class", "grouped fields");
+  termList.append("label").text("Course Terms");
 
   navBar.addYearSliderCallback(yearUpdated(this));
 }
@@ -113,40 +135,38 @@ function setQuery(q) {
     .filter(d => d["Number"] === +this.query.number)
     .filter(d => d["Course Title"] === this.query.title);
 
-  this.filteredData.sort((a, b) => (a["ID"] > b["ID"]) ? 1 : -1);
+  this.filteredData = this.filteredData.sort(sortFilteredData);
+
+  color = d3.scaleOrdinal()
+    .domain(this.filteredData.map(d => d["ID"]))
+    .range(d3.quantize(d3.interpolateSpectral, this.filteredData.length))
+    .unknown("#ccc");
 
   this.selectedData = this.filteredData;
-  console.log(this.selectedData);
 
   this.updateMenu();
   this.updateChart();
 }
 
 function updateMenu() {
-  let items = termList.selectAll("div");
-  items
+  termList.selectAll("div").remove();
+
+  let items = termList.selectAll("div")
     .data(this.filteredData)
     .join(
     enter => {
       let div = enter.append("div")
-        .attr("class", "item")
+        .attr("class", "field")
         .attr("id", d => d["ID"]);
       let check = div.append("button")
-        .attr("class", "ui toggle checkbox")
+        .attr("class", "ui slider checkbox")
         .attr("id", d => d["ID"]);
+        // .style("background", (d, i) => "linear-gradient(90deg, " + color(d["ID"]) + " 0%, rgba(255,255,255,1) 75%)");
       check.append("input")
-        .attr("type", "checkbox")
+        .attr("type", "checkbox");
       check.append("label")
         .attr("class", "itemLabel")
-        .text(d => d["ID"] + ":" + d["Year"] + " " + d["Term"] + ": " + d["Primary Instructor"]);
-    },
-    update => {
-      update.attr("id", d => d["ID"]);
-      update.select("button.checkbox").select("label.itemLabel")
-        .text(d => d["ID"] + ":" + d["Year"] + " " + d["Term"] + ": " + d["Primary Instructor"]);
-    },
-    exit => {
-      exit.remove();
+        .text(d => d["Year"] + " " + d["Term"] + " - " + d["Primary Instructor"]);
     }
   );
 
@@ -189,7 +209,7 @@ function updateChart() {
   d3.select("#headerText")
     .text(this.query.subject + this.query.number + ": " + this.query.title);
 
-  let chartData = this.selectedData;
+  let chartData = this.selectedData.sort(sortSelectionData);
   let pivotData = pivot(chartData);
 
   // transpose the data into layers
@@ -198,6 +218,7 @@ function updateChart() {
     (pivotData)
     .map(d => (d.forEach(v => v.key = d.key), d));
 
+  // console.log(chartData);
   // console.log(seriesData);
 
   // set the ranges
@@ -205,18 +226,39 @@ function updateChart() {
 
   let x = d3.scaleBand()
     .domain(Globals.grades)
-    .range([0, chartWidth])
-    .padding(0.1);
+    .range([margin.left, svgWidth - margin.right])
+    .padding(0.20);
 
   let y = d3.scaleLinear()
     .domain([0, maxTotal * 1.05])
-    .range([chartHeight, 0])
+    .range([svgHeight - margin.bottom, margin.top])
 
-  // https://observablehq.com/@d3/working-with-color
-  let color = d3.scaleOrdinal()
-    .domain(seriesData.map(d => d.key))
-    .range(d3.quantize(d3.interpolateSpectral, seriesData.length))
-    .unknown("#ccc");
+  let xAxis = g => g
+    .attr("id", "xAxis")
+    .attr("transform", `translate(0, ${ svgHeight - margin.bottom })`)
+    .call(d3.axisBottom(x).tickSizeOuter(0));
+
+  let yAxis = g => g
+    .attr("id", "yAxis")
+    .attr("transform", "translate(0, 0)")
+    .call(d3.axisRight(y).ticks(null, "s").tickSize(svgWidth))
+    .call(g => g.selectAll(".tick:not(:first-of-type) line")
+      .attr("stroke-opacity", 0.55)
+      .attr("stroke-dasharray", "2, 2"))
+    .call(g => g.selectAll(".tick text")
+      .attr("x", 0)
+      .attr("dy", -4))
+    .call(g => g.select(".domain")
+      .remove());
+
+  // add the x Axis
+  axis.append("g")
+    .call(xAxis);
+
+  // add the y Axis
+  axis.select("#yAxis").remove();
+  axis.append("g")
+    .call(yAxis);
 
   // draw the chart
   let subBarGroup = bars.selectAll("g")
@@ -238,28 +280,17 @@ function updateChart() {
       .attr("height", d => y(d[0]) - y(d[1]))
       .attr("width", x.bandwidth())
       .on("mouseover", d => {
-        let xPosition = x(d.data.Grade) + x.bandwidth() / 2.0;
-        let yPosition = y(d[1]) + ((y(d[0]) - y(d[1])) / 2.0) - tooltipHeight;
+        let xPosition = x(d.data.Grade);
+        let yPosition = y(d[1]) + y(d[0]) - y(d[1]) - tooltipHeight;
         tooltip.attr("transform", "translate(" + xPosition + "," + yPosition + ")");
         tooltip.select("text").text(d[1] - d[0]);
       });
-
-  /*
-  // add the x Axis
-  svg.append("g")
-    .attr("transform", "translate(" + margin.left + ", " + (chartHeight + margin.top) + ")")
-    .call(d3.axisBottom(x));
-
-  // add the y Axis
-  svg.append("g")
-    .attr("transform", "translate(" + margin.left + ", " + margin.top + ")")
-    .call(d3.axisLeft(y));
-
-   */
 }
 
 function clearChart() {
-
+  $('div#content')
+    .transition('fade left');
+  d3.select("div#content").selectAll("*").remove();
 }
 
 function termChecked(parent, data) {
@@ -276,9 +307,19 @@ function termUnchecked(parent, data) {
   }
 }
 
+function sortSelectionData(a, b) {
+  return (a["ID"] < b["ID"]) ? 1 : -1;
+}
+
+function sortFilteredData(a, b) {
+  return (a["ID"] > b["ID"]) ? 1 : -1;
+}
+
 function addSelectedData(id) {
   const item = this.selectedData.find(d => d["ID"] === id);
-  if (!item) this.selectedData.push(this.data[id]);
+  if (!item) {
+    this.selectedData.push(this.data[id]);
+  }
 }
 
 function removeSelectedData(id) {

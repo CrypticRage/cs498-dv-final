@@ -1,30 +1,36 @@
-const navGrid = d3.select("div#navGrid");
-const yearSliderCallbacks = [];
-let startYear = 2014;
-let endYear = 2015;
-
 // https://www.digitalocean.com/community/tutorials/js-js-singletons
+
+const yearSliderCallbacks = [];
+let startYear = 2013;
+let endYear = 2016;
+
+const navGrid = d3.select("div#navGrid");
+
 class NavBar
 {
-  constructor(){ }
+  constructor() { }
 
   setYearRange(start, end) {
     startYear = start;
     endYear = end;
   }
 
+  startYear() { return startYear; }
+  endYear() { return endYear; }
+
   addYearSliderCallback(callback) {
     yearSliderCallbacks.push(callback);
   }
 
   initNavBar(years) {
-    console.log(years);
-    let yearRow = navGrid.append("div")
+    let row = navGrid.append("div")
       .attr("class", "centered row");
 
-    let yearSliderCell = yearRow.append("div")
-      .attr("class", "eight wide column");
+    let leftCell = row.append("div")
+      .attr("class", "left aligned three wide column");
 
+    let yearSliderCell = row.append("div")
+      .attr("class", "center aligned eight wide column");
     yearSliderCell.append("div")
       .attr("class", "ui labeled ticked range slider")
       .attr("id", "yearSlider");
@@ -39,26 +45,25 @@ class NavBar
       onChange: this.yearSliderUpdated
     });
 
-    /*
-      let termRow = navGrid.append("div")
-        .attr("class", "centered row");
+    let rightCell = row.append("div")
+      .attr("class", "right aligned three wide column");
 
-      let termCell = termRow.append("div")
-        .attr("class", "eight wide column");
+    let backButton = rightCell.append("div")
+      .attr("class", "ui icon button");
 
-      termCell.append("div")
-        .attr("class", "ui dropdown");
-    */
+    backButton.append("i")
+      .attr("class", "arrow left icon");
   }
 
-  yearSliderUpdated(val, start, end) {
-    startYear = start;
-    endYear = end;
+  yearSliderUpdated(val, start, end)
+    {
+      startYear = start;
+      endYear = end;
 
-    yearSliderCallbacks.forEach((fn) => {
-      fn(val, start, end);
-    });
-  }
+      yearSliderCallbacks.forEach((fn) => {
+        fn(val, start, end);
+      });
+    }
 }
 
 const instance = new NavBar();
