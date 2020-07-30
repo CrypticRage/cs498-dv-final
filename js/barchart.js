@@ -24,8 +24,8 @@ let tooltip = null;
 let header = null;
 let color = null;
 
-let svgWidth = 650;
-let svgHeight = 500;
+let svgWidth = 800;
+let svgHeight = 600;
 
 let tooltipWidth = 30;
 let tooltipHeight = 20;
@@ -78,7 +78,7 @@ function initChart() {
     .attr("class", "row");
   svg = svgCell
     .append("svg")
-    .attr("width", "auto")
+    // .attr("width", "auto")
     // .attr("height", "auto")
     .attr("viewBox", [0, 0, svgWidth, svgHeight]);
 
@@ -123,6 +123,7 @@ function initChart() {
   termList.append("label").text("Course Terms");
 
   navBar.addYearSliderCallback(yearUpdated(this));
+  navBar.setClearCallback(this.clearChart)
 }
 
 function setQuery(q) {
@@ -290,7 +291,7 @@ function updateChart() {
 function clearChart() {
   $('div#content')
     .transition('fade left');
-  d3.select("div#content").selectAll("*").remove();
+  // d3.select("div#content").selectAll("*").remove();
 }
 
 function termChecked(parent, data) {

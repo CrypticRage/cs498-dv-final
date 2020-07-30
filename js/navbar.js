@@ -6,6 +6,9 @@ let endYear = 2016;
 
 const navGrid = d3.select("div#navGrid");
 
+let clearCallback = null;
+let populateCallback = null;
+
 class NavBar
 {
   constructor() { }
@@ -16,7 +19,16 @@ class NavBar
   }
 
   startYear() { return startYear; }
+
   endYear() { return endYear; }
+
+  setClearCallback(clear) {
+    clearCallback = clear;
+  }
+
+  setPopulateCallback(populate) {
+    populateCallback = populate;
+  }
 
   addYearSliderCallback(callback) {
     yearSliderCallbacks.push(callback);
@@ -49,21 +61,28 @@ class NavBar
       .attr("class", "right aligned three wide column");
 
     let backButton = rightCell.append("div")
+      .attr("id", "backButton")
       .attr("class", "ui icon button");
 
     backButton.append("i")
       .attr("class", "arrow left icon");
+
+    backButton = $("#backButton");
+    backButton.click(() => {
+      console.log("BACK BUTTON");
+      if (clearCallback) clearCallback();
+      if (populateCallback) populateCallback();
+    });
   }
 
-  yearSliderUpdated(val, start, end)
-    {
-      startYear = start;
-      endYear = end;
+  yearSliderUpdated(val, start, end) {
+    startYear = start;
+    endYear = end;
 
-      yearSliderCallbacks.forEach((fn) => {
-        fn(val, start, end);
-      });
-    }
+    yearSliderCallbacks.forEach((fn) => {
+      fn(val, start, end);
+    });
+  }
 }
 
 const instance = new NavBar();
