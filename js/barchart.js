@@ -1,9 +1,9 @@
+import Globals from "./globals.js";
+import Singleton from "./singleton.js"
+
 // https://observablehq.com/@d3/stacked-bar-chart
 // https://observablehq.com/@d3/styled-axes
 // https://observablehq.com/@d3/working-with-color
-
-import Globals, { Query } from "./globals.js";
-import navBar from "./navbar.js";
 
 let margin = {
   top: 10,
@@ -38,9 +38,9 @@ function BarChart(data) {
 
   this.initChart = initChart;
   this.setQuery = setQuery;
+  this.updatePage = updatePage;
   this.updateMenu = updateMenu;
   this.updateChart = updateChart;
-  this.clearChart = clearChart;
 
   this.addSelectedData = addSelectedData;
   this.removeSelectedData = removeSelectedData;
@@ -122,8 +122,9 @@ function initChart() {
     .attr("class", "grouped fields");
   termList.append("label").text("Course Terms");
 
-  navBar.addYearSliderCallback(yearUpdated(this));
-  navBar.setClearCallback(this.clearChart)
+  Singleton.addYearSliderCallback(yearUpdated(this));
+  Singleton.setClearCallback(clearChart);
+  Singleton.showBackButton();
 }
 
 function setQuery(q) {
@@ -144,7 +145,9 @@ function setQuery(q) {
     .unknown("#ccc");
 
   this.selectedData = this.filteredData;
+}
 
+function updatePage() {
   this.updateMenu();
   this.updateChart();
 }
@@ -288,10 +291,24 @@ function updateChart() {
       });
 }
 
+function yearUpdated(parent) {
+  return function() {
+    let query = parent.query;
+    query.startYear = Singleton.startYear();
+    query.endYear = Singleton.endYear();
+    parent.setQuery(query);
+    parent.updatePage();
+  }
+}
+
 function clearChart() {
+  /*
   $('div#content')
     .transition('fade left');
-  // d3.select("div#content").selectAll("*").remove();
+   */
+
+  Singleton.hideBackButton();
+  d3.select("div#content").selectAll("*").remove();
 }
 
 function termChecked(parent, data) {
@@ -328,15 +345,6 @@ function removeSelectedData(id) {
   if (item) {
     const index = this.selectedData.indexOf(item);
     if (index  > -1) this.selectedData.splice(index, 1);
-  }
-}
-
-function yearUpdated(parent) {
-  return function(val, start, end) {
-    let query = parent.query;
-    query.startYear = start;
-    query.endYear = end;
-    parent.setQuery(query);
   }
 }
 

@@ -11,7 +11,7 @@ const subjectDataFile = "data/subjects.txt";
 function GlobalData() {
   this.grades = grades;
   this.classLevels = classLevels;
-  this.gpaDataFile = gpaDataFile;
+  this.courseDataFile = gpaDataFile;
   this.subjectDataFile = subjectDataFile;
 }
 

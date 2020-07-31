@@ -1,106 +1,204 @@
+import Globals from "./globals.js";
+import Singleton from "./singleton.js";
+
 import { Menu } from "./menu.js";
 import { BarChart } from "./barchart.js";
-import Globals from "./globals.js";
-import navBar from "./navbar.js";
 
-const years = [];
-const terms = {};
-const subjects = {};
+// DOM references
+let content = null;
+let svg = null;
+let cellsPassive = null;
+let body = null
+let grid = null;
+let circles = null;
+let cellsActive = null;
+let labels = null;
+let debugText = null;
 
-let rawData = null;
-let filteredData = null;
-let courses = {};
-let courseList = [];
+// dimensions and constants
+let maxRadius = 40.0;
+let xLabelPad = 5.0;
+let xLabelHeight = 30.0;
+let yLabelWidth = 60.0;
+let yLabelPad = 5.0;
 
-// set the dimensions and margins of the graph
-var maxRadius = 40.0;
-var xLabelPad = 5.0;
-var xLabelHeight = 30.0;
-var yLabelWidth = 60.0;
-var yLabelPad = 5.0;
-
-var margin = {
+const margin = {
   top: maxRadius + xLabelHeight,
   right: 20.0,
   bottom: 20.0,
   left: maxRadius + yLabelWidth
 };
 
-var width = 1100 - margin.left - margin.right;
-var height = 1500 - margin.top - margin.bottom;
+const width = 1100 - margin.left - margin.right;
+const height = 1500 - margin.top - margin.bottom;
 
-let maxTotal = 0;
-let minTotal = 20;
+// data vars
+const years = [];
+let rawSubjectData = null;
+const subjects = {};
+let subjectKeys = [];
 
-// set the ranges
-var x = d3.scaleLinear()
-  .range([0, width])
-  .domain([100, 600]);
+let courseData = [];
+let courses = {};
+let courseList = [];
 
-var y = d3.scaleBand()
-  .range([0, height]);
+let filteredData = null;
 
-var r = d3.scaleLog()
-  .base(10)
-  .range([2, maxRadius])
-
-var cellHeight = maxRadius * 2.0;
-var cellWidth = x(Globals.classLevels[1]);
-
-const content = d3.select("div#content");
-const debugText = d3.select("div#debug");
-
-const chart = content.append("svg")
-  .attr("width", width + margin.left + margin.right)
-  .attr("height", height + margin.top + margin.bottom);
-
-const cellsPassive = chart.append("g")
-  .attr("id", "cellsPassive")
-  .attr("transform", "translate(" + margin.left + "," + xLabelHeight + ")");
-
-const grid = chart.append("g")
-  .attr("id", "grid")
-  .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-const body = chart.append("g")
-  .attr("id", "body")
-  .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-const circles = body.append("g")
-  .attr("id", "circles")
-
-const cellsActive = chart.append("g")
-  .attr("id", "cellsActive")
-  .attr("transform", "translate(" + margin.left + "," + xLabelHeight + ")");
-
-const labels = chart.append("g")
-  .attr("id", "labels")
-  .attr("transform", "translate(" + 0 + "," + 0 + ")");
-
-const menu = new Menu(chart, showBarChart);
 let barChart = null;
+let menu = null;
 
+let x = null;
+let y = null;
+let r = null;
+
+let maxTotal = 1;
+let minTotal = 1;
 let currentCellSelection = "";
 
-Globals.classLevels.forEach(function(level, index) {
-  grid.append("line")
-    .attr("class", "xLine")
-    .attr("x1", x(level))
-    .attr("y1", -maxRadius)
-    .attr("x2", x(level))
-    .attr("y2", height);
-});
+d3.csv(Globals.subjectDataFile).then(initSubjectData);
 
-d3.csv(Globals.subjectDataFile).then(function(data) {
-  let subjectKeys = [];
-
-  data.forEach(function(d) {
+function initSubjectData(data) {
+  rawSubjectData = data;
+  data.forEach(d => {
     subjects[d["Subject"]] = d["Title"];
   });
-
-  // set subject scale
   subjectKeys = Object.keys(subjects);
-  y.domain(subjectKeys);
+
+  d3.csv(Globals.courseDataFile).then(initCourseData);
+}
+
+function initCourseData(data) {
+  let i = 0;
+  data.forEach(d => {
+    d["ID"] = i;
+    d["Number"] = +d["Number"];
+    d["Year"] = +d["Year"];
+
+    if (!years.includes(d["Year"])) years.push(d["Year"]);
+
+    Globals.grades.forEach(g => {
+      d[g] = +d[g];
+    });
+
+    d["Total"] = d3.sum(Globals.grades, g => d[g]);
+
+    courseData.push(data[i++]);
+  });
+
+  years.sort();
+  initCourseChart();
+}
+
+function initCourseChart() {
+  Singleton.initNavBar();
+  Singleton.setYears(years);
+  Singleton.addYearSliderCallback(setYears);
+  Singleton.setShowCallback(showChart);
+
+  barChart = new BarChart(courseData);
+
+  showChart();
+}
+
+function showChart() {
+  initChart();
+  updateCourses();
+  drawChart();
+}
+
+function initChart() {
+  content = d3.select("div#content");
+  debugText = d3.select("div#debug");
+
+  svg = content.append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom);
+
+  cellsPassive = svg.append("g")
+    .attr("id", "cellsPassive")
+    .attr("transform", "translate(" + margin.left + "," + xLabelHeight + ")");
+
+  grid = svg.append("g")
+    .attr("id", "grid")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+  body = svg.append("g")
+    .attr("id", "body")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+  circles = body.append("g")
+    .attr("id", "circles")
+
+  cellsActive = svg.append("g")
+    .attr("id", "cellsActive")
+    .attr("transform", "translate(" + margin.left + "," + xLabelHeight + ")");
+
+  labels = svg.append("g")
+    .attr("id", "labels")
+    .attr("transform", "translate(" + 0 + "," + 0 + ")");
+
+  menu = new Menu(svg);
+  menu.setClickCallback(showBarChart);
+
+  x = d3.scaleLinear()
+    .range([0, width])
+    .domain([100, 600]);
+
+  y = d3.scaleBand()
+    .range([0, height])
+    .domain(subjectKeys);
+}
+
+function setYears() {
+  updateCourses();
+  drawCourses();
+}
+
+function updateCourses() {
+  subjectKeys = Object.keys(subjects);
+
+  filteredData = courseData
+    .filter(d => d["Year"] >= Singleton.startYear())
+    .filter(d => d["Year"] <= Singleton.endYear())
+    .filter(d => d["Subject"] in subjects);
+
+  courses = {};
+  filteredData.forEach(d => {
+    const key = d["Subject"] + ":" + d["Number"].toString() + ":" + d["Course Title"];
+    let total = d["Total"];
+
+    if (key in courses) {
+      courses[key]["Total"] += total;
+      total = courses[key]["Total"];
+    } else {
+      courses[key] =
+        {"Subject": d["Subject"], "Number": d["Number"], "Title": d["Course Title"], "Total": total};
+    }
+  });
+
+  courseList = Object.values(courses);
+  maxTotal = d3.max(courseList, d => d["Total"]);
+  minTotal = d3.min(courseList, d => d["Total"]);
+
+  // set the radius range
+  r = d3.scaleLog()
+    .base(10)
+    .range([2, maxRadius])
+    .domain([minTotal, maxTotal]);
+}
+
+function drawChart() {
+  let cellHeight = maxRadius * 2.0;
+  let cellWidth = x(Globals.classLevels[1]);
+
+  Globals.classLevels.forEach(function(level, index) {
+    grid.append("line")
+      .attr("class", "xLine")
+      .attr("x1", x(level))
+      .attr("y1", -maxRadius)
+      .attr("x2", x(level))
+      .attr("y2", height);
+  });
 
   subjectKeys.forEach(function(subject, i) {
     Globals.classLevels.forEach(function (level, j) {
@@ -128,111 +226,59 @@ d3.csv(Globals.subjectDataFile).then(function(data) {
   });
 
   labels.selectAll(".yLabel")
-    .data(data)
+    .data(rawSubjectData)
     .enter().append("text")
-      .text(function(d) { return d["Subject"]; })
-      .attr("class", "yLabel subject")
-      .attr("x", yLabelWidth - yLabelPad)
-      .attr("y", function(d) { return y(d["Subject"]) + margin.top; });
+    .text(function(d) { return d["Subject"]; })
+    .attr("class", "yLabel subject")
+    .attr("x", yLabelWidth - yLabelPad)
+    .attr("y", function(d) { return y(d["Subject"]) + margin.top; });
 
   grid.selectAll(".yLine")
-    .data(data)
+    .data(rawSubjectData)
     .enter().append("line")
-      .attr("class", "yLine")
-      .attr("x1", -maxRadius)
-      .attr("y1", function(d) { return y(d["Subject"]) })
-      .attr("x2", width + maxRadius)
-      .attr("y2", function(d) { return y(d["Subject"]) })
-});
+    .attr("class", "yLine")
+    .attr("x1", -maxRadius)
+    .attr("y1", function(d) { return y(d["Subject"]) })
+    .attr("x2", width + maxRadius)
+    .attr("y2", function(d) { return y(d["Subject"]) });
 
-d3.csv(Globals.gpaDataFile).then(function(data) {
-  let i = 0;
-  data.forEach(function(d) {
-    d["ID"] = i++;
-    d["Number"] = +d["Number"];
-    d["Year"] = +d["Year"];
-
-    if(!years.includes(d["Year"])) years.push(d["Year"]);
-
-    Globals.grades.forEach(function(grade) {
-      d[grade] = +d[grade];
-    });
-
-    if (!(d["YearTerm"] in terms)) {
-      terms[d["YearTerm"]] = {"Year": d["Year"], "Term": d["Term"]};
-    }
-
-    d["Total"] = d3.sum(Globals.grades, g => d[g]);
-  });
-
-  years.sort();
-  rawData = data;
-  barChart = new BarChart(data);
-
-  navBar.initNavBar(years);
-  navBar.addYearSliderCallback(yearUpdated);
-
-  updateData();
   drawCourses();
-});
-
-function yearUpdated(val, start, end) {
-  updateData();
-  drawCourses();
-}
-
-function updateData() {
-  filteredData = rawData
-    .filter(d => d["Year"] >= navBar.startYear())
-    .filter(d => d["Year"] <= navBar.endYear())
-    .filter(d => d["Subject"] in subjects);
-
-  courses = [];
-  filteredData.forEach(function(d) {
-    const key = d["Subject"] + ":" + d["Number"].toString() + ":" + d["Course Title"];
-    let total = d["Total"];
-
-    if (key in courses) {
-      courses[key]["Total"] += total;
-      total = courses[key]["Total"];
-    } else {
-      courses[key] =
-        {"Subject": d["Subject"], "Number": d["Number"], "Title": d["Course Title"], "Total": total};
-    }
-
-    maxTotal = (total > maxTotal) ? total : maxTotal;
-    minTotal = (total < minTotal) ? total : minTotal;
-  });
 }
 
 function drawCourses() {
-  courseList = Object.values(courses);
-  console.log(courseList);
-
-  // set subject scale
-  r.domain([minTotal, maxTotal]);
-
-  // add the circles to the chart
+  // update the circles for each course in the chart
   circles.selectAll(".course").remove();
   circles.selectAll(".course")
     .data(courseList)
     .enter()
     .append("circle")
     .attr("class", "course")
-    .attr("id", function(d) { return d["Subject"] + d["Number"] })
-    .attr("cx", function(d) { return x(d["Number"]); })
-    .attr("cy", function(d) { return y(d["Subject"]); })
-    .attr("r", function(d) { return r(d["Total"]) });
+    .attr("id", d => { return d["Subject"] + d["Number"] })
+    .attr("cx", d => { return x(d["Number"]); })
+    .attr("cy", d => { return y(d["Subject"]); })
+    .attr("r", d => { return r(d["Total"]) });
 }
 
 function showBarChart(query) {
-  query.startYear = navBar.startYear();
-  query.endYear = navBar.endYear();
+  /*
+  $('div#content')
+    .transition({
+      animation: 'fade right',
+      duration: '500ms',
+      onComplete: () => {
+        d3.select("div#content").selectAll("*").remove();
+        debugText.selectAll("*").remove();
+        barChart.initChart();
+        barChart.setQuery(query);
+      }
+    });
+   */
 
   d3.select("div#content").selectAll("*").remove();
   debugText.selectAll("*").remove();
   barChart.initChart();
   barChart.setQuery(query);
+  barChart.updatePage();
 }
 
 function handleMouseOver() {
@@ -276,8 +322,8 @@ function handleClick() {
     .filter(function(d) { return d["Subject"] === subject })
     .filter(function(d) { return (d["Number"] >= level) && (d["Number"] <= level + 99) })
     .append("p")
-      .attr("class", "debug")
-      .text(writeDebug);
+    .attr("class", "debug")
+    .text(writeDebug);
 
   currentCellSelection = this.id;
 }

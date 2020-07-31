@@ -1,16 +1,23 @@
 import { Query } from "./globals.js";
+import Singleton from "./singleton.js"
 
 let itemHeight = 22;
 let itemWidth = 0;
 
-function Menu(parent, clickCallback) {
+function Menu(parent) {
   this.parent = parent;
+
   this.init = init;
   this.clear = clear;
-  this.clickCallback = clickCallback;
+  this.clickCallback = null;
+  this.setClickCallback = setClickCallback;
 
   this.menu = parent.append("g")
     .attr("class", "menu");
+}
+
+function setClickCallback(callback) {
+  this.clickCallback = callback;
 }
 
 function init(cellPassive, courseList, baseTransform) {
@@ -89,7 +96,7 @@ function handleClick(parent) {
     let number = +menuItem.attr("data-number");
     let title = menuItem.attr("data-title");
 
-    let query = new Query(0, 0, subject, number, title);
+    let query = new Query(Singleton.startYear(), Singleton.endYear(), subject, number, title);
 
     parent.clickCallback(query);
   }
