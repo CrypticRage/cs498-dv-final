@@ -25,7 +25,7 @@ let header = null;
 let color = null;
 
 let svgWidth = 800;
-let svgHeight = 600;
+let svgHeight = 550;
 
 let tooltipWidth = 30;
 let tooltipHeight = 20;

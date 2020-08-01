@@ -25,14 +25,15 @@
 <body>
   <div id="header" class="ui main text container vertical aligned segment">
     <h1>The 498 Conundrum</h1>
+  </div>
+  <div id="page" class="ui main text container vertical aligned segment">
     <p>Over the last three years I've completed six classes at the University of Illinois Urbana-Champaign (pronounced
-      like "ban" in the middle), clawing my way towards a computer science degree. God willing and the creek don't
-      rise, a decent grade on this project will
-      wrap up my seventh class, leaving me with one final class to push through.</p>
+      like "ban" in the middle), clawing my way towards a Master's in computer science. A decent grade on this project will
+      wrap up my seventh class, leaving me with one final class to push through (God willing and the creek don't rise).</p>
     <p>I've had a bad case of what I'll call impostor syndrome or genius envy ever since I started this program. My gut
-    simply told me that everyone else got excellent grades with little effort, and that my struggles were unique. My
-    brain has occasionally pushed back with a bit of logic and reason, but to no avail.</p>
-    <p>One side effect of all this nonsense has been an slight obsession with my GPA and grades in general. At some point
+    simply told me that everyone else got excellent grades with little effort, and that my struggles with anxiety and
+      stress were unique. My brain has occasionally pushed back with a bit of logic and reason, but mostly to no avail.</p>
+    <p>One side effect of all this nonsense has been a slight obsession with my GPA and grades in general. At some point
       during my second year I reasoned that "good data can cut through any amount of emotional noise", so I asked
       a simple question:</p><p><b>How well do people actually do in all these classes?</b></p>
       <p>A few Google searches led me to the answer:</p>
@@ -46,7 +47,105 @@
       of GPA for every course at The University of Illinois. As noted in the FOIA response, some data was withheld to
       maintain FERPA compliance.</p>
     </div>
+    <p>This is a fascinating dataset that contains grade distributions for every class taught at
+    Illinois over the last decade. The visualization is also impressive, providing a bird's-eye view of
+    the number of students enrolled in each class along with the average GPA. Being a computer science
+    student, I immediately moused over the entire range of CS classes. It didn't hurt that our classes
+    are in the first row.</p>
+    <img class="ui large centered image" src="./img/cs-400-classes.png">
+    <div class="divider"></div>
+    <img class="ui large centered image" src="./img/cs-498.png">
+    <p>When I got to the end of the row and moused over CS498, three things immediately occurred to me:</p>
+    <div class="ui ordered list">
+      <div class="item"><p>Applied Cryptography sounds like a complicated subject matter, but looks like a
+        cool class that I should do a little research on.</p></div>
+      <div class="item"><p>Applied Cryptography isn't the only class at the 498 level of the computer
+        science curriculum.</p></div>
+      <div class="item"><p>There is a <b>zero percent chance</b> that over <b>2400 people</b> take that
+        class every year (on average).</p></div>
+    </div>
+    <p>This prompted my second big question:</p>
+    <p><b>What's going on here?</b></p>
+    <p>To answer that one, we need to take a look at how the dataset is structured. Every section, of every
+      class, in every semester from the Spring of 2010 to the Winter of 2019/2020 has a record in the dataset
+      represented by a row in a CSV file. Each row has a bunch of columns containing useful fields. Each field is
+      described below:</p>
+    <table class="ui celled padded table">
+      <thead>
+      <tr>
+        <th class="single line">Column #</th>
+        <th class="single line">Field Name</th>
+        <th>Description</th>
+      </tr></thead>
+      <tbody>
+      <tr>
+        <td>1</td>
+        <td class="single line">
+          Year
+        </td>
+        <td>The year the class was taught.</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td class="single line">
+          Term
+        </td>
+        <td>The semester the class was taught.<br>(Spring, Summer, Fall, or Winter)</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td class="single line">
+          YearTerm
+        </td>
+        <td>An aggregate of the previous two that's easy to filter on.<br>("2019-sp", for example)</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td class="single line">
+          Subject
+        </td>
+        <td>A short abbreviation of the subject in all caps.<br>"CS" for Computer Science, for example.</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td class="single line">
+          Number
+        </td>
+        <td>The level of the class. "498" for example.</td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td class="single line">
+          Course Title
+        </td>
+        <td>The full name of the class. "Applied Cryptography", for example.</td>
+      </tr>
+      <tr>
+        <td>7 - 20</td>
+        <td class="single line">
+          "A+" to "W"
+        </td>
+        <td>Each of these columns has a count of the number of people who received that grade.<br>
+        A+, A, A-, B+, B, B-, C+, C, C-, D+, D, D-, F, W</td>
+      </tr>
+      <tr>
+        <td>21</td>
+        <td class="single line">
+          Primary Instructor
+        </td>
+        <td>The primary instructor of each class. Instructors can have multiple sections in a given
+        semester.</td>
+      </tr>
+      </tbody>
+    </table>
+    <p>Initially I assumed that the data had been filtered by the subject (CS), then the number (498). If
+    multiple courses in a subject had the same number, they would be aggregated and then labeled with
+    whatever class title showed up first. For CS498, if we assume the classes were sorted alphabetically,
+      the label would end up being "Applied Cryptography."</p>
+    <p>Let's test a few assumptions and look at some data.</p>
+    <svg id="bar1"></svg>
   </div>
+
   <div id="footer" class="ui vertical center aligned segment">
     <p><b>Erik Bolton</b><br>CS498 - Data Visualization - Summer 2020</p>
   </div>
@@ -57,6 +156,8 @@
   <script src="js/vendor/modernizr-3.11.2.min.js"></script>
 
   <script src="js/plugins.js"></script>
+
+  <script type="module" src="js/story.js"></script>
 </body>
 
 </html>
