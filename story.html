@@ -29,10 +29,10 @@
   <div id="page" class="ui main text container vertical aligned segment">
     <p>Over the last three years I've completed six classes at the University of Illinois Urbana-Champaign (pronounced
       like "ban" in the middle), clawing my way towards a Master's in computer science. A decent grade on this project will
-      wrap up my seventh class, leaving me with one final class to push through (God willing and the creek don't rise).</p>
+      help wrap up my seventh class, leaving me with one final class to push through (God willing and the creek don't rise).</p>
     <p>I've had a bad case of what I'll call impostor syndrome or genius envy ever since I started this program. My gut
-    simply told me that everyone else got excellent grades with little effort, and that my struggles with anxiety and
-      stress were unique. My brain has occasionally pushed back with a bit of logic and reason, but mostly to no avail.</p>
+    simply tells me that everyone else gets excellent grades with little effort, and that my struggles with anxiety and
+      stress are unique. My brain has occasionally pushed back with a bit of logic and reason, but mostly to no avail.</p>
     <p>One side effect of all this nonsense has been a slight obsession with my GPA and grades in general. At some point
       during my second year I reasoned that "good data can cut through any amount of emotional noise", so I asked
       a simple question:</p><p><b>How well do people actually do in all these classes?</b></p>
@@ -53,13 +53,13 @@
     student, I immediately moused over the entire range of CS classes. It didn't hurt that our classes
     are in the first row.</p>
     <img class="ui large centered image" src="./img/cs-400-classes.png">
-    <div class="divider"></div>
-    <img class="ui large centered image" src="./img/cs-498.png">
+    <div class="ui divider"></div>
+    <img class="ui medium centered image" src="./img/cs-498.png">
     <p>When I got to the end of the row and moused over CS498, three things immediately occurred to me:</p>
     <div class="ui ordered list">
-      <div class="item"><p>Applied Cryptography sounds like a complicated subject matter, but looks like a
-        cool class that I should do a little research on.</p></div>
-      <div class="item"><p>Applied Cryptography isn't the only class at the 498 level of the computer
+      <div class="item"><p>Applied Cryptography sounds complicated, but it could be a
+        cool class. I should do a little research on it.</p></div>
+      <div class="item"><p>I'm pretty sure Applied Cryptography isn't the only class at the 498 level of the computer
         science curriculum.</p></div>
       <div class="item"><p>There is a <b>zero percent chance</b> that over <b>2400 people</b> take that
         class every year (on average).</p></div>
@@ -104,14 +104,14 @@
         <td class="single line">
           Subject
         </td>
-        <td>A short abbreviation of the subject in all caps.<br>"CS" for Computer Science, for example.</td>
+        <td>A short abbreviation of the subject in all caps.<br>("CS" for Computer Science, for example)</td>
       </tr>
       <tr>
         <td>5</td>
         <td class="single line">
           Number
         </td>
-        <td>The level of the class. "498" for example.</td>
+        <td>The level of the class.<br>("498", for example)</td>
       </tr>
       <tr>
         <td>6</td>
@@ -126,7 +126,7 @@
           "A+" to "W"
         </td>
         <td>Each of these columns has a count of the number of people who received that grade.<br>
-        A+, A, A-, B+, B, B-, C+, C, C-, D+, D, D-, F, W</td>
+        A+, A, A-, B+, B, B-<br>C+, C, C-, D+, D, D-, F, W</td>
       </tr>
       <tr>
         <td>21</td>
@@ -138,16 +138,38 @@
       </tr>
       </tbody>
     </table>
-    <p>Initially I assumed that the data had been filtered by the subject (CS), then the number (498). If
+    <p>If we assume that the data had been filtered by the subject (CS), then the number (498). If
     multiple courses in a subject had the same number, they would be aggregated and then labeled with
     whatever class title showed up first. For CS498, if we assume the classes were sorted alphabetically,
       the label would end up being "Applied Cryptography."</p>
-    <p>Let's test a few assumptions and look at some data.</p>
-    <svg id="bar1"></svg>
-  </div>
-
-  <div id="footer" class="ui vertical center aligned segment">
-    <p><b>Erik Bolton</b><br>CS498 - Data Visualization - Summer 2020</p>
+    <p>Let's test those assumptions and look at some data:</p>
+    <div id="graph1Container" class="ui"></div>
+    <br>
+    <p>Graph 1 shows the total number of students who took any CS498 class for each year those classes were
+    available. The following blurb is from the page hosting the dataset and the original visualization:</p>
+    <div class="ui raised segment"><p>The page is the result of the work of one team of students' work on this GPA
+      dataset, using data from <b>Fall 2016 through Winter 2019/20</b>.</p></div>
+    <p>Here we can see that our original assumption about how the average student count for CS498 was calculated was wrong.
+    No single year crosses the 2000 mark for enrollment, much less the average over the last four years.</p>
+    <div id="graph2Container" class="ui"></div>
+    <br>
+    <p>For the sake of comparison, we can look at the enrollment for all 400 level CS classes in Graph 2. Now we're
+    well above the expected average of 2400. For this particular question, however, the answer still eludes us and lies
+      somewhere in the middle. I didn't have much time to look at the original author's code, unfortunately, so for this
+      project it will stay a mystery.</p>
+    <p>I very much appreciate the original author's work, and acknowledge that the quantity of classes labeled 498 in the
+      CS curriculum is puzzling. I also wanted to expand on the original visualization to help answer my original
+    question:</p>
+    <p><b>How well do people actually do in all these classes?</b></p>
+    <p>For that, we need a more interactive version of the "circle graph" presented by the original author:</p>
+    <div id="explore" class="ui vertical center aligned segment">
+      <button class="massive ui primary button">
+        Explore
+      </button>
+    </div>
+    <div id="footer" class="ui vertical center aligned segment">
+      <p><b>Erik Bolton</b><br>CS498 - Data Visualization - Summer 2020</p>
+    </div>
   </div>
 
   <script src="js/vendor/jquery-3.5.1.min.js"></script>

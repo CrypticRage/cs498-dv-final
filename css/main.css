@@ -182,6 +182,36 @@ div#leftMenu {
   stroke-width: 2.0;
 }
 
+line#averageLine {
+  stroke-width: 2.0;
+  stroke: black;
+  opacity: 0.30;
+}
+
+rect.storyBar {
+  fill: #fc8d59;
+}
+
+h3.graphHeaderText {
+  text-align: center
+}
+
+p.graphFooterText {
+  text-align: center;
+  font-weight: bold
+}
+
+text.storyLabel {
+  text-anchor: middle;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+text.averageLabel {
+  font-size: 12px;
+  font-weight: bold;
+}
+
 /* ==========================================================================
    Helper classes
    ========================================================================== */
