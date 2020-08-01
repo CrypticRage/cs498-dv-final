@@ -76,8 +76,7 @@ function initChart() {
 
   let svgCell = barChart.append("div")
     .attr("class", "row");
-  svg = svgCell
-    .append("svg")
+  svg = svgCell.append("svg")
     // .attr("width", "auto")
     // .attr("height", "auto")
     .attr("viewBox", [0, 0, svgWidth, svgHeight]);

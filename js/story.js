@@ -133,7 +133,7 @@ function enrollGraph(filteredData, headerText, graphNumber) {
       .attr("y2", y(rangeAverage));
 
   averageGroup.append("text")
-      .attr("class", "averageLabel")
+      .attr("id", "averageLabel")
       .attr("x", margin.left + 40)
       .attr("y", y(rangeAverage) - 2)
       .text("Average (2016-2019): " + rangeAverage.toFixed(1));
@@ -157,7 +157,7 @@ function enrollGraph(filteredData, headerText, graphNumber) {
     .attr("y", d => y(d.sum))
     .attr("width", x.bandwidth())
     .attr("height", d => height - margin.bottom - y(d.sum))
-    .style("fill", d => { if(d.year >= 2016) return "grey"; });
+    .style("fill", d => { if(d.year < 2016) return "grey"; });
 
   const labelHeight = 20;
 

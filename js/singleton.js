@@ -8,7 +8,9 @@ let showCallback = null;
 let _startYear = 2013;
 let _endYear = 2016;
 
-const navGrid = d3.select("div#navGrid");
+const navGrid = d3.select("div#nav").append("div")
+  .attr("class", "ui middle aligned grid");
+
 let backButton = null;
 
 class Singleton {
@@ -36,7 +38,6 @@ class Singleton {
   }
 
   setYears(years) {
-    console.log(years);
     let yearSlider = $("#yearSlider");
     yearSlider.slider({
       min: years[0],

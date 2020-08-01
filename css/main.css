@@ -104,9 +104,23 @@ line.yLine {
   opacity: 0.25;
 }
 
+text.xLabel {
+  text-anchor: middle;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+text.yLabel {
+  text-anchor: end;
+  font-size: 16px;
+  font-weight: bold;
+}
+
 circle.course {
-  fill-opacity: .20;
+  fill-opacity: .10;
   fill: #000000;
+  stroke: black;
+  stroke-width: 0.25;
 }
 
 circle.course.over {
@@ -119,8 +133,8 @@ rect.cell.active {
 }
 
 rect.cell.passive {
-  fill: #555555;
-  opacity: 0.1;
+  fill: #000000;
+  opacity: 0.10;
 }
 
 rect.cell.passive.over {
@@ -174,18 +188,30 @@ g.tooltip > text {
   font-weight: bold;
 }
 
+g.menuTooltip {
+  pointer-events: none;
+  alignment-baseline: middle;
+}
+
+g.menuTooltip > rect {
+  fill: #f1f1f1;
+  stroke: black;
+  stroke-width: 0.25;
+}
+
+g.menuTooltip > text {
+  alignment-baseline: middle;
+  text-anchor: middle;
+  font-size: 13px;
+  font-weight: bold;
+}
+
 div#leftMenu {
   padding-top: 30px;
 }
 
 .ui.toggle.checkbox  {
   stroke-width: 2.0;
-}
-
-line#averageLine {
-  stroke-width: 2.0;
-  stroke: black;
-  opacity: 0.30;
 }
 
 rect.storyBar {
@@ -207,7 +233,13 @@ text.storyLabel {
   font-weight: bold;
 }
 
-text.averageLabel {
+line#averageLine {
+  stroke-width: 2.0;
+  stroke: #fc8d59;
+  opacity: 0.60;
+}
+
+text#averageLabel {
   font-size: 12px;
   font-weight: bold;
 }

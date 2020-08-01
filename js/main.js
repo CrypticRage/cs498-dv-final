@@ -8,29 +8,30 @@ import { BarChart } from "./barchart.js";
 let content = null;
 let svg = null;
 let cellsPassive = null;
-let body = null
 let grid = null;
+let lines = null;
 let circles = null;
 let cellsActive = null;
 let labels = null;
 let debugText = null;
 
 // dimensions and constants
+let minRadius = 2.0;
 let maxRadius = 40.0;
 let xLabelPad = 5.0;
-let xLabelHeight = 30.0;
-let yLabelWidth = 60.0;
+let xLabelHeight = 25.0;
 let yLabelPad = 5.0;
+let yLabelWidth = 45.0;
 
 const margin = {
-  top: maxRadius + xLabelHeight,
-  right: 20.0,
-  bottom: 20.0,
-  left: maxRadius + yLabelWidth
+  top: maxRadius + xLabelHeight + xLabelPad,
+  left: maxRadius + yLabelWidth + yLabelPad,
+  right: maxRadius,
+  bottom: maxRadius
 };
 
-const width = 1100 - margin.left - margin.right;
-const height = 1500 - margin.top - margin.bottom;
+const width = 1200;
+const height = 1300;
 
 // data vars
 const years = [];
@@ -96,6 +97,8 @@ function initCourseChart() {
   Singleton.setShowCallback(showChart);
 
   barChart = new BarChart(courseData);
+  menu = new Menu(courseData);
+  menu.setClickCallback(showBarChart);
 
   showChart();
 }
@@ -110,42 +113,56 @@ function initChart() {
   content = d3.select("div#content");
   debugText = d3.select("div#debug");
 
-  svg = content.append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom);
+  let layoutGrid = d3.select("div#content")
+    .append("div")
+    .attr("id", "grid")
+    .attr("class", "ui grid");
+
+  layoutGrid.append("div")
+    .attr("id", "leftPad")
+    .attr("class", "one wide column");
+
+  let svgCell = layoutGrid.append("div")
+    .attr("id", "svgCell")
+    .attr("class", "fourteen wide column");
+
+  layoutGrid.append("div")
+    .attr("id", "rightPad")
+    .attr("class", "one wide column");
+
+  svg = svgCell.append("svg")
+    .attr("viewBox", [0, 0, width, height]);
 
   cellsPassive = svg.append("g")
     .attr("id", "cellsPassive")
-    .attr("transform", "translate(" + margin.left + "," + xLabelHeight + ")");
-
-  grid = svg.append("g")
-    .attr("id", "grid")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-  body = svg.append("g")
-    .attr("id", "body")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-  circles = body.append("g")
-    .attr("id", "circles")
-
-  cellsActive = svg.append("g")
-    .attr("id", "cellsActive")
-    .attr("transform", "translate(" + margin.left + "," + xLabelHeight + ")");
+    .attr("transform", "translate(" + margin.left + "," + (margin.top - maxRadius) + ")");
 
   labels = svg.append("g")
     .attr("id", "labels")
     .attr("transform", "translate(" + 0 + "," + 0 + ")");
 
-  menu = new Menu(svg);
-  menu.setClickCallback(showBarChart);
+  grid = svg.append("g")
+    .attr("id", "svgGrid")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+  lines = grid.append("g")
+    .attr("id", "lines");
+
+  circles = grid.append("g")
+    .attr("id", "circles");
+
+  cellsActive = svg.append("g")
+    .attr("id", "cellsActive")
+    .attr("transform", "translate(" + margin.left + "," + (margin.top - maxRadius) + ")");
+
+  menu.setParent(svg);
 
   x = d3.scaleLinear()
-    .range([0, width])
+    .range([0, width - margin.right - margin.left])
     .domain([100, 600]);
 
   y = d3.scaleBand()
-    .range([0, height])
+    .range([0, height - margin.top - margin.bottom])
     .domain(subjectKeys);
 }
 
@@ -183,22 +200,13 @@ function updateCourses() {
   // set the radius range
   r = d3.scaleLog()
     .base(10)
-    .range([2, maxRadius])
+    .range([minRadius, maxRadius])
     .domain([minTotal, maxTotal]);
 }
 
 function drawChart() {
   let cellHeight = maxRadius * 2.0;
   let cellWidth = x(Globals.classLevels[1]);
-
-  Globals.classLevels.forEach(function(level, index) {
-    grid.append("line")
-      .attr("class", "xLine")
-      .attr("x1", x(level))
-      .attr("y1", -maxRadius)
-      .attr("x2", x(level))
-      .attr("y2", height);
-  });
 
   subjectKeys.forEach(function(subject, i) {
     Globals.classLevels.forEach(function (level, j) {
@@ -225,22 +233,57 @@ function drawChart() {
     });
   });
 
+  /*
+  labels.append("circle")
+    .attr("cx", 0)
+    .attr("cy", 0)
+    .attr("r", 10.0)
+    .style("fill", "blue")
+    .style("opacity", "0.5");
+
+  grid.append("circle")
+    .attr("cx", 0)
+    .attr("cy", 0)
+    .attr("r", 10.0)
+    .style("fill", "yellow")
+    .style("opacity", "0.5");
+   */
+
+  // vertical lines
+  labels.selectAll(".xLabel")
+    .data(Globals.classLevels)
+    .enter().append("text")
+    .text(d => d + " Level")
+    .attr("class", "xLabel level")
+    .attr("x", d => margin.left + x(d + 50))
+    .attr("y", xLabelHeight - xLabelPad);
+
+  lines.selectAll(".xLine")
+    .data(Globals.classLevels)
+    .enter().append("line")
+    .attr("class", "xLine")
+    .attr("x1", d => x(d))
+    .attr("y1", -maxRadius)
+    .attr("x2", d => x(d))
+    .attr("y2", y(rawSubjectData[rawSubjectData.length - 1]["Subject"]) + maxRadius);
+
+  // horizontal lines
   labels.selectAll(".yLabel")
     .data(rawSubjectData)
     .enter().append("text")
-    .text(function(d) { return d["Subject"]; })
+    .text(d => d["Subject"])
     .attr("class", "yLabel subject")
-    .attr("x", yLabelWidth - yLabelPad)
-    .attr("y", function(d) { return y(d["Subject"]) + margin.top; });
+    .attr("x", yLabelWidth)
+    .attr("y", d => margin.top + y(d["Subject"]));
 
-  grid.selectAll(".yLine")
+  lines.selectAll(".yLine")
     .data(rawSubjectData)
     .enter().append("line")
     .attr("class", "yLine")
     .attr("x1", -maxRadius)
-    .attr("y1", function(d) { return y(d["Subject"]) })
-    .attr("x2", width + maxRadius)
-    .attr("y2", function(d) { return y(d["Subject"]) });
+    .attr("y1", d => y(d["Subject"]))
+    .attr("x2", width - margin.left)
+    .attr("y2", d => y(d["Subject"]));
 
   drawCourses();
 }
@@ -310,7 +353,7 @@ function handleClick() {
   }
 
   cellPassive.attr("class", "cell passive click");
-  menu.init(cellPassive, courseList, body.attr("transform"));
+  menu.init(cellPassive, courseList, grid.attr("transform"));
 
   let subject = cellPassive.attr("data-subject");
   let level = +cellPassive.attr("data-level");
