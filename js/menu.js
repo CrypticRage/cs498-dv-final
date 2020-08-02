@@ -4,8 +4,8 @@ import Singleton from "./singleton.js"
 let itemHeight = 22;
 let itemWidth = 0;
 
-const tooltipWidth = 100;
-const tooltipHeight = 25;
+let tooltipWidth = 150;
+let tooltipHeight = 25;
 
 function Menu(data) {
   this.parent = null;
@@ -14,7 +14,6 @@ function Menu(data) {
   this.init = init;
   this.clear = clear;
   this.clickCallback = null;
-  this.cellPassive = null;
   this.setParent = setParent;
   this.setClickCallback = setClickCallback;
 
@@ -26,6 +25,9 @@ function setParent(parent) {
 
   this.menu = parent.append("g")
     .attr("class", "menu");
+
+  this.menuItemGroup = this.menu.append("g")
+    .attr("id", "menuItemGroup");
 
   this.tooltip = this.menu.append("g")
     .attr("class", "menuTooltip")
@@ -53,7 +55,6 @@ function setClickCallback(callback) {
 }
 
 function init(cellPassive, courseList, baseTransform) {
-  this.cellPassive = cellPassive;
   let subject = cellPassive.attr("data-subject");
   let level = +cellPassive.attr("data-level");
   let x = +cellPassive.attr("x");
@@ -74,11 +75,12 @@ function init(cellPassive, courseList, baseTransform) {
   });
 
   itemWidth = +cellPassive.attr("width");
+  tooltipWidth = itemWidth;
 
   this.menu.attr("transform", "translate(" + x + "," + y + ") " + baseTransform);
   this.clear();
 
-  let menuSelect = this.menu.selectAll(".menuItem")
+  let menuItems = this.menuItemGroup.selectAll(".menuItem")
     .data(filteredCourses)
     .enter().append("g")
       .attr("class", "menuItem")
@@ -91,27 +93,22 @@ function init(cellPassive, courseList, baseTransform) {
       .on("mouseout", handleMouseOut(this))
       .on("click", handleClick(this));
 
-  menuSelect.append("rect")
+  menuItems.append("rect")
     .attr("class", "menuItemRect")
     .attr("x", 0)
     .attr("y", 0)
     .attr("width", itemWidth)
     .attr("height", itemHeight);
 
-  menuSelect.append("text")
+  menuItems.append("text")
     .attr("class", "menuItemText")
     .attr("x", 0)
     .attr("y", itemHeight / 2.0)
-    .text(menuText);
+    .text(d => d["Number"] + "-" + d["Title"]);
 }
 
 function clear() {
-  // this.cellPassive.attr("class", "cell passive");
-  this.menu.selectAll(".menuItem").remove();
-}
-
-function menuText(d) {
-  return d["Number"] + "-" + d["Title"]
+  this.menuItemGroup.selectAll(".menuItem").remove();
 }
 
 // https://www.jstips.co/en/javascript/passing-arguments-to-callback-functions/
@@ -138,7 +135,7 @@ function handleMouseOver(parent) {
       .filter(d => d["Year"] <= Singleton.endYear());
 
     const totalStudents = d3.sum(filteredData, d => d["Total"]);
-    const transform = "translate(" + (itemWidth + 5.0) + "," + (itemHeight / 2.0 - tooltipHeight / 2.0) + ")";
+    const transform = "translate(" + 0 + "," + (-tooltipHeight) + ")";
 
     parent.tooltip
       .attr("visibility", "visible")

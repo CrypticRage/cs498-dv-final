@@ -139,27 +139,27 @@ rect.cell.active {
 }
 
 rect.cell.passive {
-  fill: #ff4b00;
+  fill: #dedede;
   opacity: 0.50;
 }
 
 rect.cell.passive.over {
-  fill: #58bcff;
+  fill: #fee97f;
   opacity: 0.40;
 }
 
 rect.cell.passive.click {
-  fill: #58bcff;
+  fill: #fee97f;
   opacity: 1.0;
 }
 
 rect.menuItemRect {
-  fill: #58bcff;
+  fill: #fee97f;
   opacity: 1.0;
 }
 
 rect.menuItemRect.over {
-  fill: #70cf93;
+  fill: #ffffff;
   opacity: 1.0;
 }
 
@@ -192,6 +192,7 @@ g.tooltip > text {
   text-anchor: middle;
   font-size: 13px;
   font-weight: bold;
+  font-style: italic;
 }
 
 g.menuTooltip {
@@ -202,7 +203,7 @@ g.menuTooltip {
 g.menuTooltip > rect {
   fill: #ffffff;
   stroke: black;
-  stroke-width: 0.25;
+  stroke-width: 0.0;
 }
 
 g.menuTooltip > text {
@@ -260,6 +261,12 @@ circle.legendCircle {
   fill: #bac3ff;
   stroke: black;
   stroke-width: 0.25;
+}
+
+.annotation {
+  font-size: 14px;
+  font-weight: bold;
+  font-style: italic;
 }
 
 /* ==========================================================================

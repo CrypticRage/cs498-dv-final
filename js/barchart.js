@@ -21,6 +21,7 @@ let svg = null;
 let axis = null;
 let bars = null;
 let tooltip = null;
+let gpaTip = null;
 let header = null;
 let color = null;
 
@@ -29,6 +30,9 @@ let svgHeight = 500;
 
 let tooltipWidth = 30;
 let tooltipHeight = 20;
+
+let gpaTipWidth = 150;
+let gpaTipHeight = 50;
 
 function BarChart(data) {
   this.data = data;
@@ -77,20 +81,7 @@ function initChart() {
   let svgCell = barChart.append("div")
     .attr("class", "row");
   svg = svgCell.append("svg")
-    // .attr("width", "auto")
-    // .attr("height", "auto")
     .attr("viewBox", [0, 0, svgWidth, svgHeight]);
-
-/*
-  svg.append("rect")
-    .attr("id", "barChartBackground")
-    .attr("x", 0)
-    .attr("y", 0)
-    .attr("rx", 10)
-    .attr("ry", 10)
-    .attr("width", svgWidth)
-    .attr("height", svgHeight);
-*/
 
   axis = svg
     .append("g")
@@ -114,6 +105,22 @@ function initChart() {
     .attr("y", tooltipWidth / 2.0)
     .attr("width", tooltipWidth)
     .attr("height", tooltipHeight);
+
+  gpaTip = svg.append("g")
+    .attr("class", "tooltip")
+    .attr("transform", "translate(" + (svgWidth - gpaTipWidth - 10.0) + "," + 10 + ")");
+
+  gpaTip.append("rect")
+    .attr("width", gpaTipWidth)
+    .attr("height", gpaTipHeight)
+    .attr("rx", 4)
+    .attr("ry", 4);
+
+  gpaTip.append("text")
+    .attr("width", gpaTipWidth)
+    .attr("height", gpaTipHeight);
+
+
 
   termList = leftMenu.append("div")
     .attr("class", "ui form");
@@ -215,6 +222,16 @@ function updateChart() {
   let chartData = this.selectedData.sort(sortSelectionData);
   let pivotData = pivot(chartData);
 
+  // calculate the total number of students and average GPA
+  let gpaSums = [];
+  let totalStudents = 0;
+  Globals.grades.forEach((g, i) => {
+    let sum = d3.sum(this.filteredData.map(d => d[g]));
+    totalStudents += sum
+    gpaSums.push(sum * Globals.gpas[i])
+  });
+  let averageGpa = totalStudents > 0 ? d3.sum(gpaSums) / totalStudents : 0.0;
+
   // transpose the data into layers
   let seriesData = d3.stack()
     .keys(chartData.map(d => d["ID"]))
@@ -290,6 +307,21 @@ function updateChart() {
         tooltip.attr("transform", "translate(" + xPosition + "," + yPosition + ")");
         tooltip.select("text").text(d[1] - d[0]);
       });
+
+  let gpaText = gpaTip.select("text")
+    .attr("class", "annotation")
+    .attr("x", gpaTipWidth / 2.0);
+
+  gpaText.selectAll("*").remove();
+  gpaText
+    .append("tspan")
+    .attr("x", gpaTipWidth / 2.0)
+    .attr("y", 20)
+    .text("Total Students: " + totalStudents)
+    .append("tspan")
+    .attr("x", gpaTipWidth / 2.0)
+    .attr("y", 40)
+    .text("Average GPA: " + averageGpa.toFixed(2));
 }
 
 function yearUpdated(parent) {

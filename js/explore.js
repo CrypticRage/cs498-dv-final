@@ -226,11 +226,11 @@ function drawAnnotations() {
     .append("tspan")
     .attr("x", 0)
     .attr("y", 50)
-    .text("3. Click on a class in that list to show the grade distribution for that class.")
+    .text("3. Click on any class in that list to show the grade distribution for that class.")
     .append("tspan")
     .attr("x", 280)
     .attr("y", 110)
-    .text("Try a 498 class. :)")
+    .text("Try a 498 class. There's plenty to choose from. :)")
     .style("fill", "red");
 }
 
