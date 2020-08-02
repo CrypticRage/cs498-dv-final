@@ -93,13 +93,13 @@ text.subject {
 }
 
 line.xLine {
-  stroke: red;
+  stroke: #000000;
   stroke-width: 2;
   opacity: 0.5;
 }
 
 line.yLine {
-  stroke: red;
+  stroke: #000000;
   stroke-width: 1;
   opacity: 0.25;
 }
@@ -117,8 +117,8 @@ text.yLabel {
 }
 
 circle.course {
-  fill-opacity: .10;
-  fill: #000000;
+  fill-opacity: .25;
+  fill: #ffffff;
   stroke: black;
   stroke-width: 0.25;
 }
@@ -133,22 +133,22 @@ rect.cell.active {
 }
 
 rect.cell.passive {
-  fill: #000000;
-  opacity: 0.10;
-}
-
-rect.cell.passive.over {
-  fill: #cbeaff;
+  fill: #ff4200;
   opacity: 0.50;
 }
 
+rect.cell.passive.over {
+  fill: #58bcff;
+  opacity: 0.40;
+}
+
 rect.cell.passive.click {
-  fill: #cbeaff;
+  fill: #58bcff;
   opacity: 1.0;
 }
 
 rect.menuItemRect {
-  fill: #cbeaff;
+  fill: #58bcff;
   opacity: 1.0;
 }
 
@@ -194,7 +194,7 @@ g.menuTooltip {
 }
 
 g.menuTooltip > rect {
-  fill: #f1f1f1;
+  fill: #ffffff;
   stroke: black;
   stroke-width: 0.25;
 }
@@ -242,6 +242,18 @@ line#averageLine {
 text#averageLabel {
   font-size: 12px;
   font-weight: bold;
+}
+
+text.legendLabel {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+circle.legendCircle {
+  fill-opacity: .10;
+  fill: #000000;
+  stroke: black;
+  stroke-width: 0.25;
 }
 
 /* ==========================================================================

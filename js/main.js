@@ -14,6 +14,7 @@ let circles = null;
 let cellsActive = null;
 let labels = null;
 let debugText = null;
+let legend = null;
 
 // dimensions and constants
 let minRadius = 2.0;
@@ -22,6 +23,9 @@ let xLabelPad = 5.0;
 let xLabelHeight = 25.0;
 let yLabelPad = 5.0;
 let yLabelWidth = 45.0;
+
+let legendLabelWidth = 10;
+let legendPad = 10;
 
 const margin = {
   top: maxRadius + xLabelHeight + xLabelPad,
@@ -32,6 +36,7 @@ const margin = {
 
 const width = 1200;
 const height = 1300;
+const legendHeight = 2 * maxRadius + 2 * legendPad;
 
 // data vars
 const years = [];
@@ -130,6 +135,10 @@ function initChart() {
     .attr("id", "rightPad")
     .attr("class", "one wide column");
 
+  legend = svgCell.append("svg")
+    .attr("viewBox", [0, 0, width, legendHeight])
+    .attr("id", "legend");
+
   svg = svgCell.append("svg")
     .attr("viewBox", [0, 0, width, height]);
 
@@ -169,6 +178,54 @@ function initChart() {
 function setYears() {
   updateCourses();
   drawCourses();
+}
+
+function revR(iVal) {
+  let iRange = maxRadius - minRadius;
+  let oMin = Math.log10(minTotal);
+  let oMax = Math.log10(maxTotal);
+  let oRange = oMax - oMin;
+
+  let oVal = ((iVal - minRadius) / iRange) * oRange + oMin;
+  oVal = Math.pow(10, oVal);
+  return oVal;
+}
+
+function updateLegend() {
+  let count = 6;
+  let midHeight = legendHeight / 2;
+  let spacing = 100;
+  let rads = [];
+
+  const base = (maxRadius - minRadius) / (count - 1);
+  for (let i = 0; i < count; i++) {
+    let iVal = minRadius + base * i;
+    let oVal = revR(iVal);
+    rads.push(oVal);
+  }
+
+  legend.selectAll("*").remove();
+
+  let group = legend.append("g")
+    .attr("transform", "translate(" + margin.left + "," + midHeight + ")");
+
+  group.selectAll("circle")
+    .data(rads)
+    .enter().append("circle")
+    .attr("class", "legendCircle")
+    .attr("id", (d, i) => i)
+    .attr("cx", (d, i) => spacing * i)
+    .attr("cy", 0)
+    .attr("r", d => r(d));
+
+  group.selectAll("text")
+    .data(rads)
+    .enter().append("text")
+    .attr("class", "legendLabel")
+    .attr("id", (d, i) => i)
+    .attr("x", (d, i) => spacing * i)
+    .attr("y", d => r(maxRadius) + legendLabelWidth)
+    .text(d => d.toFixed(0));
 }
 
 function updateCourses() {
@@ -289,6 +346,8 @@ function drawChart() {
 }
 
 function drawCourses() {
+  updateLegend();
+
   // update the circles for each course in the chart
   circles.selectAll(".course").remove();
   circles.selectAll(".course")

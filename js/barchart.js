@@ -163,8 +163,8 @@ function updateMenu() {
         .attr("id", d => d["ID"]);
       let check = div.append("button")
         .attr("class", "ui slider checkbox")
-        .attr("id", d => d["ID"]);
-        // .style("background", (d, i) => "linear-gradient(90deg, " + color(d["ID"]) + " 0%, rgba(255,255,255,1) 75%)");
+        .attr("id", d => d["ID"])
+        .style("background", (d, i) => "linear-gradient(90deg, " + color(d["ID"]) + " 0%, rgba(255,255,255,1) 30%)");
       check.append("input")
         .attr("type", "checkbox");
       check.append("label")
