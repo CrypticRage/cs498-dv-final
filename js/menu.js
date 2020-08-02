@@ -69,7 +69,7 @@ function init(cellPassive, courseList, baseTransform) {
       return a["Title"] > b["Title"] ? 1 : -1;
     }
     else {
-      return a["Number"] > b["Number"] ? 1 : -1;
+      return a["Number"] < b["Number"] ? 1 : -1;
     }
   });
 

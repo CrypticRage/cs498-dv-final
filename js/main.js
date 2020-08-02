@@ -25,7 +25,7 @@ let yLabelPad = 5.0;
 let yLabelWidth = 45.0;
 
 let legendLabelWidth = 10;
-let legendPad = 10;
+let legendPad = 25;
 
 const margin = {
   top: maxRadius + xLabelHeight + xLabelPad,
@@ -191,10 +191,53 @@ function revR(iVal) {
   return oVal;
 }
 
+function drawAnnotations() {
+  let group = legend.append("g");
+
+  group.append("text")
+    .attr("transform", "translate(" + 10 + "," + 20 + ")")
+    .attr("class", "annotation")
+    .attr("x", 0)
+    .attr("y", 0)
+    .text("Enrollment Scale - The bigger the circle, the more students.");
+
+  group.append("text")
+    .attr("transform", "translate(" + 10 + "," + 40 + ")")
+    .attr("class", "annotation")
+    .attr("x", 0)
+    .attr("y", 0)
+    .text("CS105 always seems to have the highest enrollment.");
+
+  let introBlock = group.append("text")
+    .attr("transform", "translate(" + (width / 2 - 10) + "," + 10 + ")")
+    .attr("class", "annotation")
+    .attr("x", 0)
+    .attr("y", 10);
+
+  introBlock
+    .append("tspan")
+    .attr("x", 0)
+    .attr("y", 10)
+    .text("1. Use the slider above to limit the graph to a range of specific years.")
+    .append("tspan")
+    .attr("x", 0)
+    .attr("y", 30)
+    .text("2. Click on any orange cell to see a list of classes for that specific subject and level.")
+    .append("tspan")
+    .attr("x", 0)
+    .attr("y", 50)
+    .text("3. Click on a class in that list to show the grade distribution for that class.")
+    .append("tspan")
+    .attr("x", 275)
+    .attr("y", 110)
+    .text("Try a CS498 class. :)");
+}
+
+
 function updateLegend() {
   let count = 6;
   let midHeight = legendHeight / 2;
-  let spacing = 100;
+  let spacing = 90;
   let rads = [];
 
   const base = (maxRadius - minRadius) / (count - 1);
@@ -207,7 +250,7 @@ function updateLegend() {
   legend.selectAll("*").remove();
 
   let group = legend.append("g")
-    .attr("transform", "translate(" + margin.left + "," + midHeight + ")");
+    .attr("transform", "translate(" + margin.left / 4 + "," + (midHeight + 20) + ")");
 
   group.selectAll("circle")
     .data(rads)
@@ -226,6 +269,8 @@ function updateLegend() {
     .attr("x", (d, i) => spacing * i)
     .attr("y", d => r(maxRadius) + legendLabelWidth)
     .text(d => d.toFixed(0));
+
+  drawAnnotations();
 }
 
 function updateCourses() {
@@ -322,6 +367,14 @@ function drawChart() {
     .attr("x1", d => x(d))
     .attr("y1", -maxRadius)
     .attr("x2", d => x(d))
+    .attr("y2", y(rawSubjectData[rawSubjectData.length - 1]["Subject"]) + maxRadius);
+
+  lines
+    .append("line")
+    .attr("id", "fourNineEightLine")
+    .attr("x1", d => x(498))
+    .attr("y1", - 2 * maxRadius)
+    .attr("x2", d => x(498))
     .attr("y2", y(rawSubjectData[rawSubjectData.length - 1]["Subject"]) + maxRadius);
 
   // horizontal lines

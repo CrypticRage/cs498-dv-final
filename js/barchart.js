@@ -9,7 +9,7 @@ let margin = {
   top: 10,
   right: 0,
   bottom: 20,
-  left: 15
+  left: 20
 };
 
 let buttons = null;
@@ -25,7 +25,7 @@ let header = null;
 let color = null;
 
 let svgWidth = 800;
-let svgHeight = 550;
+let svgHeight = 500;
 
 let tooltipWidth = 30;
 let tooltipHeight = 20;
@@ -237,13 +237,15 @@ function updateChart() {
     .range([svgHeight - margin.bottom, margin.top])
 
   let xAxis = g => g
-    .attr("id", "xAxis")
+    .attr("class", "xAxis")
+    .style("font-size", "14")
     .attr("transform", `translate(0, ${ svgHeight - margin.bottom })`)
     .call(d3.axisBottom(x).tickSizeOuter(0));
 
   let yAxis = g => g
-    .attr("id", "yAxis")
+    .attr("class", "yAxis")
     .attr("transform", "translate(0, 0)")
+    .style("font-size", "14")
     .call(d3.axisRight(y).ticks(null, "s").tickSize(svgWidth))
     .call(g => g.selectAll(".tick:not(:first-of-type) line")
       .attr("stroke-opacity", 0.55)
@@ -259,7 +261,7 @@ function updateChart() {
     .call(xAxis);
 
   // add the y Axis
-  axis.select("#yAxis").remove();
+  axis.select(".yAxis").remove();
   axis.append("g")
     .call(yAxis);
 

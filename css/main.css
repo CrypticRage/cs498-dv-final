@@ -104,6 +104,12 @@ line.yLine {
   opacity: 0.25;
 }
 
+line#fourNineEightLine {
+  stroke: #ff0000;
+  stroke-width: 3;
+  opacity: 0.4;
+}
+
 text.xLabel {
   text-anchor: middle;
   font-size: 16px;
@@ -118,7 +124,7 @@ text.yLabel {
 
 circle.course {
   fill-opacity: .25;
-  fill: #ffffff;
+  fill: #bac3ff;
   stroke: black;
   stroke-width: 0.25;
 }
@@ -133,7 +139,7 @@ rect.cell.active {
 }
 
 rect.cell.passive {
-  fill: #ff4200;
+  fill: #ff4b00;
   opacity: 0.50;
 }
 
@@ -250,8 +256,8 @@ text.legendLabel {
 }
 
 circle.legendCircle {
-  fill-opacity: .10;
-  fill: #000000;
+  fill-opacity: .40;
+  fill: #bac3ff;
   stroke: black;
   stroke-width: 0.25;
 }
