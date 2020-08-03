@@ -396,10 +396,15 @@ function drawChart() {
     .attr("x2", width - margin.left)
     .attr("y2", d => y(d["Subject"]));
 
-  drawCourses();
+   drawCourses();
 }
 
 function drawCourses() {
+  if (currentCellSelection) {
+    let cellPassive = d3.select("g#cellsPassive").select("rect#" + currentCellSelection + ".cell.passive");
+    cellPassive.attr("class", "cell passive");
+    currentCellSelection = "";
+  }
   updateLegend();
 
   // update the circles for each course in the chart
@@ -432,6 +437,8 @@ function showBarChart(query) {
 
   d3.select("div#content").selectAll("*").remove();
   debugText.selectAll("*").remove();
+  currentCellSelection = "";
+
   barChart.initChart();
   barChart.setQuery(query);
   barChart.updatePage();

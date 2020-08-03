@@ -17,7 +17,7 @@ function Menu(data) {
   this.setParent = setParent;
   this.setClickCallback = setClickCallback;
 
-  // Singleton.addYearSliderCallback(handleClear(this));
+  Singleton.addYearSliderCallback(handleClear(this));
 }
 
 function setParent(parent) {
@@ -105,9 +105,12 @@ function init(cellPassive, courseList, baseTransform) {
     .attr("x", 0)
     .attr("y", itemHeight / 2.0)
     .text(d => d["Number"] + "-" + d["Title"]);
+
+  this.menu.attr("visibility", "visible");
 }
 
 function clear() {
+  this.menu.attr("visibility", "hidden");
   this.menuItemGroup.selectAll(".menuItem").remove();
 }
 
