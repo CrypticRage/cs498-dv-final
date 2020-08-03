@@ -186,11 +186,15 @@ sortedData = filteredData.sort((a, b) => {
     in the Fall of 2019. A grand total of <b>25 people</b> took the class. Instead, lets take a look at the grade distribution for
     that semester, and circle back to my original question.</p>
     <img class="ui massive centered image" src="./img/cs-498-ac.png">
+    <p>Here we get another discrepancy with the original circle chart. The average GPA listed was <b>3.63</b>, while the actual
+    average GPA for the single semester is closer to <b>3.24</b>.</p>
     <p>I very much appreciate the original author's work, and acknowledge that the quantity of classes labeled 498 in the
-      CS curriculum is puzzling (and has steadily increased over the last decade). I was also inspired to recreate and expand
+      CS curriculum is puzzling. That count has also increased dramatically over the last decade. When developing a course visualization
+      that includes the entire catalog at UIUC, it's easy to overlook one class. I was also inspired to recreate and expand
       the original circle graph to help answer my first question:</p>
     <p><b>How well do people actually do in all these classes?</b></p>
-    <p>For that, we need a more interactive version of the "circle graph", which ended up being the bulk of the work for
+    <p>For that, we need a more interactive version of the "circle graph" that includes the ability to see the grade distributions
+      for each class in a chart similar to the one shown for Applied Cryptography, which ended up being the bulk of the work for
       this project. Smash the button below if you're curious:</p>
     <div id="explore" class="ui vertical center aligned segment">
       <button class="massive ui primary button" onclick="window.location.href = 'explore.html'">Explore</button>
