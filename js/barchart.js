@@ -120,7 +120,9 @@ function initChart() {
     .attr("width", gpaTipWidth)
     .attr("height", gpaTipHeight);
 
-
+  leftMenu.append("p")
+    .text("Individual course terms can be shown/hidden with the sliders below. Mouse over any segment of the bar chart" +
+      " to show the number of students represented by that segment. Use the arrow button to return.");
 
   termList = leftMenu.append("div")
     .attr("class", "ui form");
