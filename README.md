@@ -1,4 +1,4 @@
-## CS498 - Data Visualization Final
+# CS498 - Data Visualization Final
 Summer 2020 - Erik Bolton
 
 This project is first and foremost an exploration of a dataset that Illinois maintains containing the grade distrubitions
